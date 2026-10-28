@@ -71,7 +71,7 @@ async function handle(request, env, ctx, timing) {
     if (path === "/login" || path === "/password-reset" || path === "/password-change" || path.startsWith("/api/auth/") || path === "/reader-setup.html" || path === "/api/reader/settings") return await auth.route(request);
     // Missing resources are 404s, independent of the login state or database availability.
     if (!path.startsWith("/api/") && !asset) return new Response(request.method === "HEAD" ? null : "Not found", {status: 404});
-    if (![ "/style.css", "/theme.js", "/clock.js", "/device.js", "/sw.js" ].includes(path) && !/^\/app-shell\.[a-f0-9]+\.html$/.test(path)) {
+    if (![ "/style.css", "/theme.js", "/clock.js", "/device.js", "/i18n.js", "/sw.js" ].includes(path) && !/^\/app-shell\.[a-f0-9]+\.html$/.test(path)) {
       if (!auth.ready()) return json({
         error: "login_unavailable"
       }, 503);
@@ -178,7 +178,7 @@ async function handle(request, env, ctx, timing) {
   if (!asset) return new Response("Not found", {
     status: 404
   });
-  const css = [ "/style.css", "/device.js" ].includes(path), program = /^\/app-shell\.[a-f0-9]+\.html$/.test(path), sw = path === "/sw.js";
+  const css = [ "/style.css", "/device.js", "/i18n.js" ].includes(path), program = /^\/app-shell\.[a-f0-9]+\.html$/.test(path), sw = path === "/sw.js";
   const cache = sw ? "public, max-age=0, must-revalidate" : program ? "public, max-age=31536000, immutable" : css ? url.searchParams.get("v") === asset.version ? "public, max-age=31536000, immutable" : "public, max-age=300" : asset.cache;
   const headers = {
     "Content-Type": asset.type,

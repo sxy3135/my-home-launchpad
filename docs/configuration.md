@@ -6,6 +6,7 @@ Open the gear icon at the bottom of the page.
 
 | Setting | Menu |
 | --- | --- |
+| Interface language | Settings → Language, or the login-page selector |
 | Add courses and links | Settings → Organize → module … menu |
 | Manage semesters | Settings → Manage semesters |
 | Rename, resize, or reorder modules | Settings → Organize |
@@ -14,15 +15,17 @@ Open the gear icon at the bottom of the page.
 | Connect Reader | Settings → Connect Reader |
 | Install folder helpers | Settings → Windows folder helper / Mac folder setup |
 
+Language follows the browser on the first visit. Your selection is saved separately and keeps course names, links, and article text unchanged.
+
 Page settings save automatically in the current browser. Search preferences are saved when you select a search engine.
 
 ## Configuration files
 
 | File | Purpose | Create it with |
 | --- | --- | --- |
-| `.dev.vars` | Local authentication keys | `npm run secrets:local` |
+| `.dev.vars` | Local authentication keys | `npm start` |
 | `wrangler.jsonc` | Local Worker and D1 settings | Included in the project |
-| `wrangler.deploy.json` | Your Cloudflare account, Worker, and D1 | `npm run configure:deploy` |
+| `wrangler.deploy.json` | Your Cloudflare account, Worker, and D1 | `npm run setup:deploy` |
 | `examples/demo-config.json` | Sample page content | Import through App Settings |
 
 `.dev.vars` and `wrangler.deploy.json` are ignored by Git. Keep local and deployed keys separate.
@@ -31,10 +34,10 @@ Page settings save automatically in the current browser. Search preferences are 
 
 | Name | Purpose | Local value | Deployed value |
 | --- | --- | --- | --- |
-| `HOME_SECURITY_KEY` | Password hashing, session signatures, and Reader credential encryption | Generated in `.dev.vars` | Set in Cloudflare Secrets |
-| `HOME_RECOVERY_KEY` | Initial password setup and password resets | Generated in `.dev.vars` | Set in Cloudflare Secrets |
+| `HOME_SECURITY_KEY` | Password hashing, session signatures, and Reader credential encryption | Generated in `.dev.vars` | Generated in `.wrangler/deploy-secrets.json` and uploaded to Cloudflare |
+| `HOME_RECOVERY_KEY` | Initial password setup and password resets | Generated in `.dev.vars` | Generated in `.wrangler/deploy-secrets.json` and uploaded to Cloudflare |
 
-Each value must encode 32 random bytes as base64url. `npm run secrets:local` generates both local values and preserves an existing file. For deployment, follow [Set secrets](deployment.md#4-set-secrets).
+Each value must encode 32 random bytes as base64url. `npm start` generates both local values and preserves an existing file. For deployment, follow [Deployment keys](deployment.md#deployment-keys).
 
 ## Import and export
 

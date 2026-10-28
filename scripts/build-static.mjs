@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve, dirname } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { minify } from 'terser';
+import {annotateMarkup} from '../src/shared/i18n.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const frontend = resolve(root, 'src/frontend');
@@ -16,6 +17,12 @@ const inline = text => text.replace(/<\/script/gi, '<\\/script');
 const escapeHtml = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 
 await mkdir(dist, { recursive: true });
+const stripImports=source=>source.replace(/^import[^\n]+\n/gm,'').replace(/^export\s+/gm,'');
+const i18nSource='(function(){const englishMessages='+JSON.stringify(JSON.parse(await readFile(resolve(root,'src/shared/messages.json'),'utf8')))+';'+stripImports(await readFile(resolve(root,'src/shared/i18n.mjs'),'utf8'))+'\n'+stripImports(await readFrontend('i18n.js'))+'})();';
+const i18n=await minify(i18nSource,options);
+if(!i18n.code)throw Error('Empty language bootstrap');
+await writeFile(resolve(dist,'i18n.js'),i18n.code+'\n');
+
 
 // These standalone assets also serve the server-rendered login and Reader settings pages.
 for (const name of ['style.css', 'theme.js', 'device.js', 'clock.js']) {
@@ -47,9 +54,9 @@ if (!theme.code || !device.code) throw Error('Empty startup bootstrap');
 if (!source.includes('<!-- home-head -->') || !source.includes('<!-- home-program -->')) {
   throw Error('Missing home template anchors');
 }
-const html = source
+const html = annotateMarkup(source)
   .replace('<!-- mac-folder-script -->', () => escapeHtml(script))
-  .replace('<!-- home-head -->', () => `<script>${inline(theme.code)}</script>\n  <script>${inline(device.code)}</script>\n  <style>${css}</style>`)
+  .replace('<!-- home-head -->', () => `<script>${inline(i18n.code+";"+theme.code)}</script>\n  <script>${inline(device.code)}</script>\n  <style>${css}</style>`)
   .replace('<!-- home-program -->', () => `<script data-home-bundle="${filename}">${inline(bundle)}</script>`);
 const version = hash(html);
 const program = 'app-shell.' + version + '.html';
@@ -72,9 +79,5 @@ for (const name of await readdir(dist)) {
   }
 }
 console.log(JSON.stringify({ script: filename, scriptBytes: Buffer.byteLength(bundle), program, programBytes: Buffer.byteLength(html), initialProgramRequests: 1, precacheFiles: 1 }));
-// Always regenerate local helpers from source before embedding Worker resources.
-const helper = spawnSync(process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3'),
-  [resolve(root, 'scripts/package-windows-folders.py')], {cwd: root, encoding: 'utf8'});
-if (helper.error || helper.status !== 0) throw Error('Local-folder packaging failed. Install Python 3 or set PYTHON to its executable. ' + (helper.error?.message || helper.stderr));
-console.log(helper.stdout.trim());
+await (await import('./package-windows-folders.mjs')).packageWindowsFolders(root);
 await import('./build-worker.mjs');

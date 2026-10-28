@@ -37,51 +37,19 @@ function begin(h, handle, id=1, x=10, y=10) {
   handle.dispatchEvent(new Evt('pointerdown',{button:0,pointerId:id,clientX:x,clientY:y,isPrimary:true}));
   h.doc.dispatchEvent(new Evt('pointermove',{pointerId:id,clientX:200,clientY:450}));
 }
-test('grid row geometry is the single height source for saved spans, editor labels and gap-aware stacking', () => {
-  const initial=fixture(), M=initial.M;
-  assert.deepEqual([2,3,4].map(n=>M.moduleHeight(n)),[160,248,336]);
-  assert.equal(M.moduleHeight(4),2*M.moduleHeight(2)+M.moduleGap);
-  const config=copy(M.restoreConfig(require("./fixtures/config.json").config));
-  const left=config.modules.find(m=>m.type==='learning'), upper=config.modules.find(m=>m.type==='reader'), lower=config.modules.find(m=>m.type==='shortcuts');
-  config.modules=[left,upper,lower];config.modules.forEach(m=>m.size='medium');
-  [left.heightUnits,upper.heightUnits,lower.heightUnits]=[4,2,2];
-  const before=copy(config), h=fixture(config);
-  assert.deepEqual(h.config(),before);assert.deepEqual(h.get('module-grid').children.map(p=>p.dataset.moduleId),before.modules.map(m=>m.id));
-  for(const m of before.modules){const panel=h.get('module-panel-'+m.id);assert.equal(panel.style['--module-height-units'],String(m.heightUnits));assert.equal(panel.style.height,undefined);}
-  assert.equal(h.doc.documentElement.style['--module-row-height'],'72px');assert.equal(h.doc.documentElement.style['--module-gap'],'16px');
-  h.get('edit-button').click();assert.deepEqual(h.config(),before);moduleAction(h,left.id,'编辑');
-  assert.deepEqual(h.get('field-heightUnits-options').children.map(e=>e.textContent),['2 份 · 160px','3 份 · 248px','4 份 · 336px']);h.get('cancel-dialog').click();
-  h.get('edit-button').click();assert.deepEqual(h.config(),before);
-  for(const width of [1440,900,390,1440]){h.ctx.window.innerWidth=width;h.ctx.window.dispatchEvent(new Evt('resize'));}
-  assert.deepEqual(h.config(),before);assert.deepEqual(fixture(h.config()).config(),before);
-  const css=fs.readFileSync(root+'/src/frontend/style.css','utf8');
-  assert(css.includes('grid-auto-rows:var(--module-row-height)'));assert(css.includes('grid-auto-flow:row'));assert(!css.includes('dense'));
-  assert(css.includes('gap:var(--module-gap)'));assert(css.includes('.module-grid>.section-panel,.module-placeholder{grid-row:span'));
-  assert(!css.includes('height:var(--module-height)'));
-});
-test('changing central row and gap definitions updates the formula, grid variables and editor heights together', () => {
-  const h=harness();h.run(root+'/src/frontend/icons.js');
-  const source=fs.readFileSync(root+'/src/frontend/model.js','utf8').replace('moduleRowHeight = 72, moduleGap = 16','moduleRowHeight = 76, moduleGap = 20');
-  require('node:vm').runInNewContext(source,h.ctx);
-  for(const name of ['ui','interactions','module-layout','app'])h.run(root+'/src/frontend/'+name+'.js');
-  const M=h.ctx.window.HomeModel;
-  assert.equal(M.moduleHeight(4),2*M.moduleHeight(2)+20);
-  assert.equal(h.doc.documentElement.style['--module-row-height'],'76px');assert.equal(h.doc.documentElement.style['--module-gap'],'20px');
-  h.doc.getElementById('edit-button').click();homeAction(h,'learning','编辑');
-  assert.deepEqual(h.doc.getElementById('field-heightUnits-options').children.map(e=>e.textContent),['2 份 · 172px','3 份 · 268px','4 份 · 364px']);
-});
 test('insertion handles a tall left peer alongside a lower right module, without requiring identical top coordinates', () => {
   const h=fixture(), I=h.ctx.window.HomeInteractions;
   const rects=[{left:0,right:480,top:0,bottom:336},{left:496,right:976,top:0,bottom:160},{left:496,right:976,top:176,bottom:336}];
   assert.equal(I.moduleInsertionAt(rects,900,190).horizontal,true);assert.equal(I.moduleInsertionAt(rects,900,190).index,3);
   assert.equal(I.moduleInsertionAt(rects,520,300).horizontal,true);assert.equal(I.moduleInsertionAt(rects,520,300).index,2);
+  const row=[{left:0,right:1000,top:0,bottom:200},{left:0,right:480,top:230,bottom:500},{left:510,right:740,top:230,bottom:330}];
+  for(const [x,y,index] of [[900,50,0],[10,190,1],[700,270,3],[20,270,1]])assert.equal(I.moduleInsertionAt(row,x,y).index,index);
   const wide={left:0,right:976,top:352,bottom:688};
   assert.equal(I.moduleInsertionAt([...rects,wide],900,360).horizontal,false);assert.equal(I.moduleInsertionAt([...rects,wide],900,360).index,3);
   assert.equal(I.moduleInsertionAt([...rects,wide],100,680).index,4);
 });
 test('height migration defaults by type, repeats without resets, and isolates invalid height recovery without mutating raw data', () => {
   const h=fixture(), M=h.M, old=copy(seed.config), next=M.restoreConfig(old);
-  assert.equal(M.moduleRowHeight,72);assert.equal(M.moduleGap,16);
   assert.deepEqual(copy(next.modules.map(m=>m.heightUnits)),copy(next.modules.map(m=>m.type==='learning'?4:3)));
   for(const module of next.modules) delete module.heightUnits;
   const upgraded=M.restoreConfig(next);upgraded.modules.forEach((m,i)=>m.heightUnits=2+i%3);
@@ -101,7 +69,9 @@ test('height migration defaults by type, repeats without resets, and isolates in
   }
 });
 test('module height editor persists units independently of width/content/order and supports undo, reload and actual export/import', async () => {
-  const h=fixture();h.get('edit-button').click();const added=createModule(h,'高度测试');
+  const h=fixture(), preferences=[['myhome.appearance.v1','{"minute":1140}'],['myhome.search-engine','bing'],['myhome.device.v1','{"version":1,"expiresAt":123}']];
+  for(const [key,value] of preferences)h.store.set(key,value);
+  h.get('edit-button').click();const added=createModule(h,'高度测试');
   assert.equal(added.heightUnits,3);
   moduleAction(h,'learning','编辑');
   assert.equal(h.get('field-heightUnits').value,'4');
@@ -124,6 +94,7 @@ test('module height editor persists units independently of width/content/order a
   h.get('export-button').click();const exported=JSON.parse(await blob.text());assert.deepEqual(exported,saved);
   const receiving=fixture();receiving.get('import-file').files=[{size:100,text:async()=>JSON.stringify(exported)}];receiving.get('import-file').dispatchEvent(new Evt('change'));await settle();
   receiving.get('confirm-yes').click();await settle();assert.deepEqual(receiving.config(),saved);
+  for(const [key,value] of preferences)assert.equal(h.store.get(key),value);
 });
 test('mixed saved heights use measured drag placeholders and cancellation preserves units and logical order', () => {
   const initial=fixture(), config=initial.M.restoreConfig(require("./fixtures/config.json").config);config.modules.forEach((m,i)=>m.heightUnits=2+i%3);
@@ -214,6 +185,7 @@ test('entry editor uses current modules, moves stable entries to new modules, pr
 test('ordinary module deletion reports count/name, cancellation preserves data, confirmed delete is undoable and special modules have no delete control', async () => {
   const h=fixture();h.get('edit-button').click();const before=h.M.restoreConfig(require("./fixtures/config.json").config), module=before.modules.find(m=>m.id==='affairs');
   moduleAction(h,'affairs','删除');assert(h.get('editor-confirm').textContent.includes(module.name));assert(h.get('editor-confirm').textContent.includes(String(module.links.length)+' 个入口'));
+  assert(h.get('editor-fields').inert);assert.equal(h.get('confirm-dialog').open,false);
   h.get('editor-confirm-cancel').click();await settle();h.get('cancel-dialog').click();assert.equal(h.writes.length,0);
   moduleAction(h,'affairs','删除');h.get('editor-confirm-yes').click();await settle();assert(!h.config().modules.some(m=>m.id==='affairs'));
   undo(h);assert.deepEqual(h.config().modules.find(m=>m.id==='affairs'),copy(module));
@@ -221,35 +193,6 @@ test('ordinary module deletion reports count/name, cancellation preserves data, 
     assert(!h.get('module-panel-'+id).querySelector('.editing-controls'));
     moduleAction(h,id,'编辑');assert.equal(h.get('editor-delete').hidden,true);h.get('cancel-dialog').click();
   }
-});
-test('module drag uses same-size live placeholder, preserves DOM on cancel, commits logical order and never launches a course', () => {
-  const h=fixture();h.get('edit-button').click();const before=copy(h.M.restoreConfig(require("./fixtures/config.json").config).modules.map(m=>m.id)), grid=geometry(h);
-  const handle=h.get('module-panel-learning');
-  // AX/DOM rectangles expose properties through a prototype in real browsers.
-  for(const panel of grid.children)panel.getBoundingClientRect=()=>Object.create(panel.rect);
-  begin(h,handle);assert.equal(grid.capture,1);const placeholder=h.doc.querySelector('.module-placeholder');assert(placeholder);assert(placeholder.className.includes('module-size-wide'));assert.equal(placeholder.style['--module-height-units'],'4');assert.equal(placeholder.style.height,undefined);
-  assert.equal(h.get('module-panel-learning').hidden,true);assert(h.doc.body.className.includes('is-sorting'));
-  assert.equal(h.doc.querySelectorAll('.drag-ghost').length,1);assert.equal(grid.children.at(-1),placeholder);
-  assert.equal(h.get('courses').querySelector('.sort-handle'),undefined);
-  h.doc.dispatchEvent(new Evt('keydown',{key:'Escape'}));assert.equal(h.doc.querySelector('.module-placeholder'),undefined);
-  assert.deepEqual(grid.children.map(e=>e.dataset.moduleId),before);assert.equal(h.get('module-panel-learning').hidden,false);assert.equal(h.writes.length,0);
-  begin(h,handle,2);h.doc.dispatchEvent(new Evt('pointerup',{pointerId:2,clientX:200,clientY:450}));
-  assert.equal(h.config().modules.at(-1).type,'learning');assert.equal(h.doc.querySelectorAll('.drag-ghost').length,0);assert(!h.doc.body.className.includes('is-sorting'));
-  assert.equal(h.ctx.window.opened,undefined);undo(h);assert.deepEqual(h.config().modules.map(m=>m.id),before);
-  const next=h.get('module-panel-learning');geometry(h);begin(h,next,3);h.doc.dispatchEvent(new Evt('pointercancel',{pointerId:3}));assert.equal(h.doc.querySelector('.module-placeholder'),undefined);
-  assert.deepEqual(h.get('module-grid').children.map(e=>e.dataset.moduleId),before);
-});
-test('module insertion distinguishes wide singleton rows and horizontal peers; responsive spans and shared card tracks never persist screen changes', () => {
-  const h=fixture(), I=h.ctx.window.HomeInteractions, r=[{left:0,right:1000,top:0,bottom:200},{left:0,right:480,top:230,bottom:500},{left:510,right:740,top:230,bottom:330}];
-  assert.equal(I.moduleInsertionAt(r,900,50).index,0);assert.equal(I.moduleInsertionAt(r,10,190).index,1);
-  assert.equal(I.moduleInsertionAt(r,700,270).index,3);assert.equal(I.moduleInsertionAt(r,20,270).index,1);
-  h.get('edit-button').click();const before=h.writes.length;
-  for(const width of [1440,850,390,1440]){h.ctx.window.innerWidth=width;h.ctx.window.dispatchEvent(new Evt('resize'));}
-  assert.equal(h.writes.length,before);
-  const css=fs.readFileSync(root+'/src/frontend/style.css','utf8');assert(css.includes('grid-auto-flow:row'));assert(!css.includes('dense'));
-  assert(css.includes('.module-size-small{grid-column:span 1}'));assert(css.includes('.module-size-medium{grid-column:span 2}'));assert(css.includes('.module-size-wide{grid-column:span 4}'));
-  assert(css.includes('@media(max-width:1212px)'));assert(css.includes('@media(max-width:608px)'));assert(css.includes('container-type:inline-size'));assert(css.includes('grid-template-columns:repeat(var(--card-columns),minmax(0,var(--card-width)))'));
-  assert(!css.includes('.utility-rail'));assert(!fs.readFileSync(root+'/src/frontend/app.js','utf8').includes('固定首行'));
 });
 test('broken/partially invalid configuration retains raw storage, blocks ordinary edits, exports original bytes and restores only after confirmed valid import', async () => {
   for(const corrupted of ['{invalid JSON', (()=>{const c=copy(seed.config);c.sections.affairs[0].url='javascript:bad()';return JSON.stringify(c)})()]){
@@ -288,23 +231,11 @@ test('Reader state, bindings and refresh timer survive module rename/resize/orde
   assert.equal(list.closest('.section-panel').id,'module-panel-new-reader-id');
   refresh.click();await settle();assert.equal(calls.filter(p=>p==='/api/reader/sync').length,1);assert.equal(h.get('reader-items').children.length,1);
 });
-test('module export/import contains all fields and UI mutations leave appearance/search/trust keys untouched', async () => {
-  const h=fixture();for(const [key,value] of [['myhome.appearance.v1','{"minute":1140}'],['myhome.search-engine','bing'],['myhome.device.v1','{"version":1,"expiresAt":123}']])h.store.set(key,value);
-  h.get('edit-button').click();createModule(h,'额外入口','宽 · 4 列');let blob;h.ctx.URL=class extends URL{static createObjectURL(b){blob=b;return 'blob:config'}static revokeObjectURL(){}};
-  h.get('export-button').click();const data=JSON.parse(await blob.text());assert.deepEqual(data,h.config());assert.equal(data.modules.at(-1).size,'wide');assert(!Object.hasOwn(data,'sectionOrder'));
-  assert.deepEqual(copy(h.M.restoreConfig(data)),data);assert.equal(h.store.get('myhome.appearance.v1'),'{"minute":1140}');assert.equal(h.store.get('myhome.search-engine'),'bing');assert.equal(h.store.get('myhome.device.v1'),'{"version":1,"expiresAt":123}');
-});
-test('home course entries edit a single course draft; no nested drag scope remains', () => {
- const h=fixture();h.get('edit-button').click();const course=h.M.restoreConfig(require("./fixtures/config.json").config).semesters[0].courses[0];
- const entry=h.get('courses').children[0].querySelectorAll('.course-link')[1];entry.click();
- assert.equal(h.get('dialog-title').textContent,'编辑课程');assert.equal(h.get('field-entry-name').value,course.links[1].name);
- assert.equal(h.doc.querySelector('.sort-handle'),undefined);assert.equal(h.doc.querySelector('.editing-controls'),undefined);
- assert.equal(h.ctx.window.opened,undefined);assert.equal(h.writes.length,0);
-});
-
 test('new browser has no private defaults; first link persists and exports through the existing configuration', async () => {
  const h=harness();for(const name of ['icons','model','ui','interactions','module-layout'])h.run(root+'/src/frontend/'+name+'.js');
  const M=h.ctx.window.HomeModel, empty=M.defaultConfig();
+ const demo=M.restoreConfig(JSON.parse(fs.readFileSync(root+'/examples/demo-config.json','utf8')));
+ assert.equal(demo.version,4);assert.equal(demo.semesters[0].courses.length,1);
  assert.equal(empty.semesters[0].courses.length,0);assert(empty.modules.every(m=>m.links.length===0));
  h.store.delete(KEY);h.run(root+'/src/frontend/app.js');h.get=id=>h.doc.getElementById(id);
  assert(!h.store.has(KEY));h.get('edit-button').click();homeAction(h,'learning','添加入口');

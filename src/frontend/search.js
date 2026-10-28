@@ -1,6 +1,7 @@
 // Search providers and focus mode; lift, blur, inert background and input survive pointer leave.
 (function() {
   "use strict";
+  const t = message => (typeof window === "undefined" ? globalThis : window).HomeI18n?.t(message) ?? message;
   const root = document.getElementById("home-search");
   const input = document.getElementById("search-query");
   const trigger = document.getElementById("search-engine");
@@ -24,7 +25,7 @@
       key: "q"
     },
     baidu: {
-      name: "百度",
+      name: t("百度"),
       url: "https://www.baidu.com/s",
       key: "wd"
     },
@@ -47,8 +48,8 @@
     state.engine = value;
     const name = engines[value].name;
     label.textContent = name;
-    trigger.setAttribute("aria-label", "搜索引擎：" + name);
-    trigger.title = "搜索引擎：" + name;
+    trigger.setAttribute("aria-label", t("搜索引擎：") + name);
+    trigger.title = t("搜索引擎：") + name;
     if (brand) brand.innerHTML = options.find(option => option.dataset.engine === value)?.querySelector(".engine-brand")?.innerHTML || "";
     for (const option of options) option.setAttribute("aria-selected", String(option.dataset.engine === value));
   }
@@ -216,4 +217,8 @@
   });
   window.addEventListener("pagehide", exit);
   window.performance?.mark?.("myhome:search-ready");
+  window.addEventListener("myhome:language", () => {
+    engines.baidu.name = t("百度");
+    selectEngine(state.engine);
+  });
 })();

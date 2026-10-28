@@ -1,6 +1,7 @@
 // Accessible select menus: keyboard selection, positioning, focus and dismissal.
 (function(root) {
   "use strict";
+  const t = message => (typeof window === "undefined" ? globalThis : window).HomeI18n?.t(message) ?? message;
   let current = null;
   const node = (tag, cls, text) => {
     const e = document.createElement(tag);
@@ -62,7 +63,7 @@
       input.value = String(nextValue);
       const selected = items.findIndex(x => x.value === input.value);
       if (selected < 0 && items.length) input.value = items[0].value;
-      text.textContent = items.find(x => x.value === input.value)?.text || "请选择";
+      text.textContent = items.find(x => x.value === input.value)?.text || t("请选择");
       trigger.title = text.textContent;
       trigger.disabled = !items.length;
       menu.replaceChildren();

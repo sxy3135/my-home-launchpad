@@ -1,6 +1,7 @@
 // Single-target execution, guarded course launching and pointer/keyboard sorting.
 (function(root) {
   "use strict";
+  const t = message => (typeof window === "undefined" ? globalThis : window).HomeI18n?.t(message) ?? message;
   function openTarget(target, browser = root) {
     if (target.kind !== "web") {
       try {
@@ -90,7 +91,7 @@
       if (notice && d.started) onNotice?.(notice);
     }
     function reset() {
-      cleanup("拖动已取消");
+      cleanup(t("拖动已取消"));
       group = null;
     }
     function register(container, items) {
@@ -172,13 +173,13 @@
         d.placeholder = doc.createElement("div");
         d.placeholder.className = "module-placeholder " + d.source.className.split(" ").filter(c => c.startsWith("module-size-")).join(" ");
         d.placeholder.style.setProperty("--module-height-units", d.source.style.getPropertyValue("--module-height-units"));
-        d.placeholder.textContent = "放置模块";
+        d.placeholder.textContent = t("放置模块");
         d.placeholder.setAttribute("aria-hidden", "true");
         d.wasHidden = d.source.hidden;
         d.container.insertBefore(d.placeholder, d.source);
         d.source.hidden = true;
       }
-      onNotice?.("拖动到插入位置，按 Esc 取消");
+      onNotice?.(t("拖动到插入位置，按 Esc 取消"));
       tick();
     }
     function update() {
@@ -207,15 +208,15 @@
       const edge = Math.min(72, browser.innerHeight / 5), y = drag.y, delta = y < edge ? -Math.min(18, (edge - y) / 3) : y > browser.innerHeight - edge ? Math.min(18, (y - browser.innerHeight + edge) / 3) : 0;
       try {
         if (delta) browser.scrollBy({top: delta, behavior: "instant"});
-      } catch { cleanup("拖动已取消"); return; }
-      try { update(); frame = browser.requestAnimationFrame(tick); } catch { cleanup("拖动已取消"); }
+      } catch { cleanup(t("拖动已取消")); return; }
+      try { update(); frame = browser.requestAnimationFrame(tick); } catch { cleanup(t("拖动已取消")); }
     }
     function move(e) {
       if (!drag || e.pointerId !== drag.pointer) return;
       drag.x = e.clientX;
       drag.y = e.clientY;
       if (!drag.started && Math.hypot(drag.x - drag.startX, drag.y - drag.startY) >= 7) {
-        try { start(); } catch { cleanup("拖动已取消"); return; }
+        try { start(); } catch { cleanup(t("拖动已取消")); return; }
       }
       // The running frame loop coalesces pointer events; pointerup still flushes the final position.
             if (drag?.started) e.preventDefault();
@@ -227,29 +228,29 @@
         e.preventDefault();
         d.x = e.clientX;
         d.y = e.clientY;
-        try { update(); } catch { cleanup("拖动已取消"); return; }
+        try { update(); } catch { cleanup(t("拖动已取消")); return; }
       }
       const drop = d.started && d.before !== undefined;
       cleanup();
       if (drop) onDrop({
         id: d.id,
         beforeId: d.before
-      }); else if (d.started) onNotice?.("排序未改变");
+      }); else if (d.started) onNotice?.(t("排序未改变"));
     }
     doc.addEventListener("pointermove", move, {
       passive: false
     });
     doc.addEventListener("pointerup", finish);
     doc.addEventListener("pointercancel", e => {
-      if (drag?.pointer === e.pointerId) cleanup("拖动已取消");
+      if (drag?.pointer === e.pointerId) cleanup(t("拖动已取消"));
     });
     doc.addEventListener("lostpointercapture", e => {
-      if (drag?.pointer === e.pointerId) cleanup("拖动已取消");
+      if (drag?.pointer === e.pointerId) cleanup(t("拖动已取消"));
     });
     doc.addEventListener("keydown", e => {
       if (e.key === "Escape" && drag) {
         e.preventDefault();
-        cleanup("拖动已取消");
+        cleanup(t("拖动已取消"));
       }
     });
     doc.addEventListener("click", e => {
@@ -266,15 +267,15 @@
       if (drag) e.preventDefault();
     });
     doc.addEventListener("visibilitychange", () => {
-      if (doc.hidden) cleanup("拖动已取消");
+      if (doc.hidden) cleanup(t("拖动已取消"));
     });
-    browser.addEventListener("blur", () => cleanup("拖动已取消"));
-    browser.addEventListener("resize", () => cleanup("拖动已取消"));
+    browser.addEventListener("blur", () => cleanup(t("拖动已取消")));
+    browser.addEventListener("resize", () => cleanup(t("拖动已取消")));
     return {
       reset,
       register,
       bindModule,
-      cancel: () => cleanup("拖动已取消"),
+      cancel: () => cleanup(t("拖动已取消")),
       active: () => !!drag
     };
   }

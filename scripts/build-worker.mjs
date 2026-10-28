@@ -11,7 +11,7 @@ const mime = {
   '.css': 'text/css; charset=utf-8',
   '.txt': 'text/plain; charset=utf-8', '.zip': 'application/zip'
 };
-const assetNames = /^(index\.html|fast\.html|app-shell\.[a-f0-9]+\.html|sw\.js|device\.js|style\.css|theme\.js|clock\.js|launchpad\.[a-f0-9]+\.js|third-party-licenses\.txt|my-home-windows-folders\.zip)$/;
+const assetNames = /^(index\.html|fast\.html|app-shell\.[a-f0-9]+\.html|sw\.js|device\.js|i18n\.js|style\.css|theme\.js|clock\.js|launchpad\.[a-f0-9]+\.js|third-party-licenses\.txt|my-home-windows-folders\.zip)$/;
 for (const filename of await readdir(dist)) {
   if (!assetNames.test(filename)) continue;
   const bytes = await readFile(resolve(dist, filename));
@@ -37,12 +37,14 @@ for (const filename of await readdir(dist)) {
 const moduleBody = source => source
   .replace(/^import[^\n]+\n/gm, '')
   .replace(/^export\s+(?=(?:async\s+)?(?:class|function|const|let)\b)/gm, '');
-const [auth, reader, entry] = await Promise.all([
+const [shared, messages, auth, reader, entry] = await Promise.all([
+  readFile(resolve(root, 'src/shared/i18n.mjs'), 'utf8'),
+  readFile(resolve(root, 'src/shared/messages.json'), 'utf8'),
   readFile(resolve(root, 'worker/auth.mjs'), 'utf8'),
   readFile(resolve(root, 'worker/reader.mjs'), 'utf8'),
   readFile(resolve(root, 'worker/index.mjs'), 'utf8')
 ]);
-const bundle = moduleBody(auth).replaceAll('__HOME_DEVICE_VERSION__', assets['/device.js'].version) + '\n' +
+const bundle = 'const englishMessages = '+JSON.stringify(JSON.parse(messages))+';\n'+moduleBody(shared)+'\n'+moduleBody(auth).replaceAll('__HOME_DEVICE_VERSION__', assets['/device.js'].version).replaceAll('__HOME_I18N_VERSION__', assets['/i18n.js'].version) + '\n' +
   moduleBody(reader) + '\n' +
   moduleBody(entry).replace('const ASSETS = __MY_HOME_ASSETS__;',
     'const ASSETS = ' + JSON.stringify(assets) + ';\n' +

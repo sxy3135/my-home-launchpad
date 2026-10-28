@@ -26,7 +26,7 @@ Change your password from Settings → Change password. Enter the current passwo
 
 For a reset, open `/password-reset` and enter `HOME_RECOVERY_KEY`. Previous sessions are rejected when devices reconnect.
 
-If the recovery key is lost, generate a replacement and upload it with the [secret command](deployment.md#4-set-secrets). Preserve `HOME_SECURITY_KEY`; existing password hashes and Reader credentials depend on it.
+If the recovery key is lost, generate a replacement and upload it with the [secret command](deployment.md#manual-setup). Preserve `HOME_SECURITY_KEY`; existing password hashes and Reader credentials depend on it.
 
 ## Restore D1
 

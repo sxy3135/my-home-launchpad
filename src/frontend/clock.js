@@ -9,24 +9,18 @@
     month: "2-digit",
     day: "2-digit"
   });
-  const label = new Intl.DateTimeFormat("zh-CN", {
-    timeZone: zone,
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-  });
-  const weekday = new Intl.DateTimeFormat("zh-CN", {
-    timeZone: zone,
-    weekday: "long"
-  });
-  let timer = null, suspended = false;
+  let timer = null, suspended = false, dateLanguage = "";
   function update(now) {
     window.HomeTheme?.update(now);
     if (!clock || !date) return;
     const time = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
     if (clock.textContent !== time) clock.textContent = time;
     const p = Object.fromEntries(parts.formatToParts(now).map(x => [ x.type, x.value ])), day = p.year + "-" + p.month + "-" + p.day;
-    if (date.dateTime !== day) {
+    const language = window.HomeI18n?.language || "zh-CN";
+    if (date.dateTime !== day || dateLanguage !== language) {
+      dateLanguage = language;
+      const label = new Intl.DateTimeFormat(language,{timeZone:zone,year:"numeric",month:"long",day:"numeric"});
+      const weekday = new Intl.DateTimeFormat(language,{timeZone:zone,weekday:"long"});
       date.dateTime = day;
       date.textContent = label.format(now) + " · " + weekday.format(now);
     }
@@ -56,4 +50,5 @@
     sync();
   });
   window.addEventListener("myhome:lock", stop);
+  window.addEventListener("myhome:language", sync);
 })();

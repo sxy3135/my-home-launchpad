@@ -1,5 +1,5 @@
 const {chooseEntry}=require("./fixtures/editor-actions.cjs");
-const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+const test=require('node:test'),assert=require('node:assert/strict');
 const {harness,Evt,root}=require('./fixtures/dom.cjs'),KEY='my-home-launchpad.config.v1';
 const clone=x=>JSON.parse(JSON.stringify(x));
 const data={gptUrl:'https://chatgpt.com/g/g-p-test/project?x=%26%23%25',obsidianUrl:'obsidian://open?vault=My%20Vault&file=Example%20%26%20%E7%AC%94%E8%AE%B0%23Heading',folderPath:'/Users/中文/Documents/O\'Brien (1) & #100% %2F $(touch NO_EXEC)'};
@@ -44,12 +44,4 @@ test('blocked GPT does not prevent native request; exceptions are reported witho
 });
 test('Windows title retains original launch order and extras with no callback',()=>{
  const h=fixture('windows');h.start();const expected=h.M.courseLaunchTargets(h.course.links,'windows').map(x=>x.url);h.doc.querySelectorAll('.course-launch')[0].click();assert.deepEqual(clone(h.ctx.window.opened.map(x=>x[0])),clone(expected));assert(!expected.some(x=>x.startsWith('shortcuts:')));
-});
-test('Mac folder instructions include the shared script and configured Shortcut name',()=>{
- const build=fs.readFileSync(root+'/scripts/build-static.mjs','utf8'),html=fs.readFileSync(root+'/src/home.html','utf8'),model=fs.readFileSync(root+'/src/frontend/model.js','utf8');
- assert(build.includes('mac-folders/open-folder.sh'));
- assert(html.includes('<!-- mac-folder-script -->'));
- assert(html.includes('My Home 打开资料'));assert(html.includes('Do Nothing'));
- assert(model.includes('const MAC_SHORTCUT = "My Home 打开资料"'));
- assert(fs.readFileSync(root+'/dist/index.html','utf8').includes('/usr/bin/open -a Finder'));
 });

@@ -1,14 +1,15 @@
 // Independent Reader metadata refresh and sync; protected responses stay in memory.
 (function() {
   "use strict";
+  const t = message => (typeof window === "undefined" ? globalThis : window).HomeI18n?.t(message) ?? message;
   const $ = id => document.getElementById(id), list = $("reader-items"), status = $("reader-status"), refresh = $("reader-refresh"), setup = $("reader-setup-link");
   if (!list || !refresh) return;
-  const shortDate = new Intl.DateTimeFormat("zh-CN", {
+  let shortDate = new Intl.DateTimeFormat(window.HomeI18n?.language || "zh-CN", {
     timeZone: "Asia/Shanghai",
     month: "long",
     day: "numeric"
   });
-  const fullDate = new Intl.DateTimeFormat("zh-CN", {
+  let fullDate = new Intl.DateTimeFormat(window.HomeI18n?.language || "zh-CN", {
     timeZone: "Asia/Shanghai",
     year: "numeric",
     month: "long",
@@ -31,8 +32,8 @@
     window.HomeUI?.closeSelect();
     detailUrl = item.url;
     $("reader-details-title").textContent = item.title;
-    $("reader-details-source").textContent = item.source || "未提供来源";
-    $("reader-details-time").textContent = fullDate.format(item.savedAt) + "（北京时间）";
+    $("reader-details-source").textContent = item.source || t("未提供来源");
+    $("reader-details-time").textContent = fullDate.format(item.savedAt) + t("（北京时间）");
     $("reader-details-open").href = item.url;
     details.showModal();
     $("reader-details-close").focus();
@@ -40,9 +41,13 @@
   function compactTime(savedAt) {
     const elapsed = Date.now() - savedAt;
     if (elapsed < 0 || elapsed >= 864e5) return shortDate.format(savedAt);
-    if (elapsed < 6e4) return "刚刚";
-    if (elapsed < 36e5) return Math.floor(elapsed / 6e4) + "分钟前";
-    return Math.floor(elapsed / 36e5) + "小时前";
+    if (window.HomeI18n?.language === "en" && elapsed >= 6e4 && elapsed < 864e5) {
+      const unit = elapsed < 36e5 ? "minute" : "hour";
+      return new Intl.RelativeTimeFormat("en", {numeric:"auto"}).format(-Math.floor(elapsed / (unit === "minute" ? 6e4 : 36e5)), unit);
+    }
+    if (elapsed < 6e4) return t("刚刚");
+    if (elapsed < 36e5) return Math.floor(elapsed / 6e4) + t("分钟前");
+    return Math.floor(elapsed / 36e5) + t("小时前");
   }
   $("reader-details-close").addEventListener("click", closeDetails);
   details.addEventListener("cancel", event => {
@@ -64,7 +69,7 @@
     login_required: "登录已失效，请重新登录。"
   };
   function errorText(code) {
-    return errorMessages[code] || (/^reader_http_\d+$/.test(code) ? "Reader 接口返回 HTTP " + code.slice(12) + "。" : "同步失败，请稍后重试。");
+    return t(errorMessages[code]) || (/^reader_http_\d+$/.test(code) ? t("Reader 接口返回 HTTP ") + code.slice(12) + t("。") : t("同步失败，请稍后重试。"));
   }
   function message(text) {
     status.textContent = text;
@@ -74,8 +79,8 @@
   function controls() {
     refresh.disabled = !!syncing || Date.now() < cooldownUntil || !snapshot?.connected;
     refresh.setAttribute("aria-busy", String(!!syncing));
-    refresh.title = !snapshot?.connected ? "请先连接 Reader" : Date.now() < cooldownUntil ? "稍后可再次核对 Inbox" : "重新核对 Reader Inbox";
-    if (syncError) refresh.title = errorText(syncError); else if (failed || snapshot?.stale) refresh.title = "当前显示缓存文章；上次更新未完成，可重新核对 Inbox。";
+    refresh.title = !snapshot?.connected ? t("请先连接 Reader") : Date.now() < cooldownUntil ? t("稍后可再次核对 Inbox") : t("重新核对 Reader Inbox");
+    if (syncError) refresh.title = errorText(syncError); else if (failed || snapshot?.stale) refresh.title = t("当前显示缓存文章；上次更新未完成，可重新核对 Inbox。");
     setup.hidden = syncError !== "invalid_token" && !!snapshot?.connected && !!snapshot?.webhookConfigured;
   }
   function render() {
@@ -93,17 +98,17 @@
     list.replaceChildren();
     controls();
     if (!snapshot) {
-      message(failed ? "暂时无法加载 Inbox" : "正在读取 Inbox…");
+      message(failed ? t("暂时无法加载 Inbox") : t("正在读取 Inbox…"));
       finish();
       return;
     }
     if (!snapshot.connected) {
-      message("尚未连接 Reader");
+      message(t("尚未连接 Reader"));
       finish();
       return;
     }
     const stale = failed || snapshot.stale;
-    message(syncError ? syncError === "invalid_token" ? errorMessages.invalid_token : "暂未更新 · " + errorText(syncError) : stale ? "暂未更新" : syncing || snapshot.syncing || continuing ? "正在同步 Inbox…" : !snapshot.initialized ? "尚未完成首次同步" : !snapshot.webhookConfigured ? "Webhook 尚未接入" : "");
+    message(syncError ? syncError === "invalid_token" ? t(errorMessages.invalid_token) : t("暂未更新 · ") + errorText(syncError) : stale ? t("暂未更新") : syncing || snapshot.syncing || continuing ? t("正在同步 Inbox…") : !snapshot.initialized ? t("尚未完成首次同步") : !snapshot.webhookConfigured ? t("Webhook 尚未接入") : "");
     // Cached articles remain useful; put freshness diagnostics on the refresh control.
     if (snapshot.items.length) message("");
     for (const item of [...snapshot.items].sort((a, b) => b.savedAt - a.savedAt)) {
@@ -116,7 +121,7 @@
       a.href = item.url;
       a.target = "_blank";
       a.rel = "noopener noreferrer";
-      a.setAttribute("aria-label", item.title + (item.source ? "，来源：" + item.source : "") + "，保存于" + fullDate.format(item.savedAt));
+      a.setAttribute("aria-label", item.title + (item.source ? t("，来源：") + item.source : "") + t("，保存于") + fullDate.format(item.savedAt));
       const title = document.createElement("strong");
       title.className = "reader-article-title";
       title.textContent = item.title;
@@ -134,15 +139,15 @@
       const time = document.createElement("time");
       time.dateTime = new Date(item.savedAt).toISOString();
       time.textContent = compactTime(item.savedAt);
-      time.title = fullDate.format(item.savedAt) + "（北京时间，保存时间）";
+      time.title = fullDate.format(item.savedAt) + t("（北京时间，保存时间）");
       meta.append(time);
       a.append(meta);
       const info = document.createElement("button");
       info.className = "icon-button reader-details-button";
       info.type = "button";
       info.textContent = "…";
-      info.title = "查看完整标题、来源和保存时间";
-      info.setAttribute("aria-label", "查看文章信息：" + item.title);
+      info.title = t("查看完整标题、来源和保存时间");
+      info.setAttribute("aria-label", t("查看文章信息：") + item.title);
       info.setAttribute("aria-haspopup", "dialog");
       info.setAttribute("aria-controls", "reader-details-dialog");
       info.dataset.articleUrl = item.url;
@@ -153,7 +158,7 @@
     if (snapshot.initialized && !snapshot.items.length && !stale && !syncError) {
       const empty = document.createElement("p");
       empty.className = "reader-empty";
-      empty.textContent = "收件箱暂无文章";
+      empty.textContent = t("收件箱暂无文章");
       list.append(empty);
     }
     finish();
@@ -280,7 +285,7 @@
   async function resume() {
     if (document.hidden || stopped || locked) return;
     if (window.navigator?.onLine === false) {
-      if (!snapshot) message("当前离线，联网后更新 Inbox。");
+      if (!snapshot) message(t("当前离线，联网后更新 Inbox。"));
       return;
     }
     await read();
@@ -346,4 +351,9 @@
   });
   render();
   visibility();
+  window.addEventListener("myhome:language", () => {
+    shortDate = new Intl.DateTimeFormat(window.HomeI18n.language, {timeZone:"Asia/Shanghai",month:"long",day:"numeric"});
+    fullDate = new Intl.DateTimeFormat(window.HomeI18n.language, {timeZone:"Asia/Shanghai",year:"numeric",month:"long",day:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false});
+    render();
+  });
 })();

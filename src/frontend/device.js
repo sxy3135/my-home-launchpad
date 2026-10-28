@@ -1,6 +1,7 @@
 // Synchronous device gate, server-verified trust, offline logout and bounded background work.
 (function(root) {
   "use strict";
+  const t = message => (typeof window === "undefined" ? globalThis : window).HomeI18n?.t(message) ?? message;
   const doc = root.document, TRUST = "myhome.device.v1", BLOCK = "myhome.device.lock.v1", PENDING = "myhome.logout.pending.v1", YEAR = 365 * 864e5;
   let unlocked = false, persistent = false, record = null, channel = null, sessionTask = null, logoutTask = null, registration = null, backgroundTimer = null, expiryTimer = null, disposed = false, checkingAt = 0, updatingAt = 0;
   const controllers = new Set;
@@ -48,7 +49,7 @@
     for (const c of controllers) c.abort();
     controllers.clear();
   }
-  function lock(reason = "登录已失效，请重新登录。", broadcast = true) {
+  function lock(reason = t("登录已失效，请重新登录。"), broadcast = true) {
     const was = unlocked;
     unlocked = false;
     record = null;
@@ -70,7 +71,7 @@
     clearTimeout(expiryTimer);
     if (!unlocked) return;
     if (!valid(record)) {
-      lock("设备信任已到期，请重新登录。");
+      lock(t("设备信任已到期，请重新登录。"));
       return;
     }
     expiryTimer = setTimeout(expiry, Math.min(2147483647, record.expiresAt - Date.now() + 10));
@@ -92,7 +93,7 @@
     unlocked = true;
     show();
     expiry();
-    if (!persistent) status("浏览器无法保存设备信任，下次需联网登录。");
+    if (!persistent) status(t("浏览器无法保存设备信任，下次需联网登录。"));
     return true;
   }
   // This decision runs in the head, before any personal DOM is rendered.
@@ -110,7 +111,7 @@
   if (grant && !read(BLOCK) && !read(PENDING) && (!stored || grant.revision === stored.revision)) accept(stored ? {
     ...grant,
     expiresAt: Math.min(grant.expiresAt, stored.expiresAt)
-  } : grant); else if (grant && stored && grant.authenticated === true && grant.revision !== stored.revision) lock("登录状态已变更，请重新登录。"); else if (!read(BLOCK) && !read(PENDING) && valid(stored)) {
+  } : grant); else if (grant && stored && grant.authenticated === true && grant.revision !== stored.revision) lock(t("登录状态已变更，请重新登录。")); else if (!read(BLOCK) && !read(PENDING) && valid(stored)) {
     record = stored;
     unlocked = true;
     persistent = true;
@@ -180,7 +181,7 @@
       id: root.crypto?.randomUUID?.() || String(Date.now()),
       at: Date.now()
     });
-    lock("已退出。课程和入口配置仍保留。");
+    lock(t("已退出。课程和入口配置仍保留。"));
     if (root.navigator?.onLine !== false) flushLogout();
   }
   function checkSession() {
@@ -201,7 +202,7 @@
         const data = await response.json();
         if (!unlocked || record !== before) return;
         if (data.authenticated === false || data.authenticated === true && data.revision !== record.revision) {
-          lock("登录状态已变更，请重新登录。");
+          lock(t("登录状态已变更，请重新登录。"));
           return;
         }
         if (data.authenticated === true && Number.isFinite(data.expiresAt) && data.expiresAt < record.expiresAt) {
@@ -222,11 +223,11 @@
   async function prepareProgram() {
     if (!unlocked) return;
     if (!persistent) {
-      status("浏览器无法保存设备信任，下次需联网登录。");
+      status(t("浏览器无法保存设备信任，下次需联网登录。"));
       return;
     }
     if (!root.navigator?.serviceWorker || !root.isSecureContext) {
-      status("此浏览器暂不支持本地启动，当前使用联网模式。");
+      status(t("此浏览器暂不支持本地启动，当前使用联网模式。"));
       return;
     }
     try {
@@ -236,22 +237,22 @@
         updateViaCache: "none"
       });
       const waiting = () => {
-        if (registration.waiting) status("新版已准备，关闭所有 My Home 标签页后重新打开即可启用。");
+        if (registration.waiting) status(t("新版已准备，关闭所有 My Home 标签页后重新打开即可启用。"));
       };
       waiting();
       registration.addEventListener("updatefound", () => {
         const worker = registration.installing;
         worker?.addEventListener("statechange", () => {
           if (worker.state === "installed") {
-            if (registration.active) waiting(); else status("此设备已保存本地启动程序。");
+            if (registration.active) waiting(); else status(t("此设备已保存本地启动程序。"));
           }
         });
       });
       root.navigator.serviceWorker.ready.then(() => {
-        if (!registration.waiting && unlocked) status("此设备可从本地启动。");
+        if (!registration.waiting && unlocked) status(t("此设备可从本地启动。"));
       }).catch(() => {});
     } catch {
-      status("本地启动程序未能保存，联网时仍可使用。");
+      status(t("本地启动程序未能保存，联网时仍可使用。"));
     }
   }
   function resume() {
@@ -274,14 +275,14 @@
     const form = event.currentTarget || event.target, input = form.querySelector('input[name="password"]'), button = form.querySelector('button[type="submit"]');
     if (!input || button?.disabled) return;
     if (root.navigator?.onLine === false) {
-      message("当前离线，请联网后输入密码。");
+      message(t("当前离线，请联网后输入密码。"));
       return;
     }
     if (button) button.disabled = true;
     message("");
     try {
       if (read(PENDING) && !await flushLogout(true)) {
-        message("上次退出尚未完成，请联网后重试。");
+        message(t("上次退出尚未完成，请联网后重试。"));
         return;
       }
       const password = input.value, path = form.getAttribute("action"), confirm = form.querySelector('input[name="confirm"]'), recovery = form.querySelector('input[name="recovery"]'), current = form.querySelector('input[name="current"]');
@@ -306,17 +307,17 @@
       if (recovery) recovery.value = "";
       if (current) current.value = "";
       if (!response.ok || data.authenticated !== true) {
-        message(data.error === "rate_limited" ? "尝试过于频繁，请十分钟后再试。" : data.error === "invalid_password" ? "密码至少 8 位，且两次输入须一致。" : data.error === "invalid_recovery" ? "恢复密钥不正确。" : data.error === "password_conflict" ? "密码已被修改，请重新登录后重试。" : data.error === "wrong_password" ? "密码不正确。" : data.error === "forbidden" ? "请重新登录，并使用当前密码验证。" : response.status === 401 ? "密码不正确。" : "登录服务暂不可用，请稍后重试。");
+        message(data.error === "rate_limited" ? t("尝试过于频繁，请十分钟后再试。") : data.error === "invalid_password" ? t("密码至少 8 位，且两次输入须一致。") : data.error === "invalid_recovery" ? t("恢复密钥不正确。") : data.error === "password_conflict" ? t("密码已被修改，请重新登录后重试。") : data.error === "wrong_password" ? t("密码不正确。") : data.error === "forbidden" ? t("请重新登录，并使用当前密码验证。") : response.status === 401 ? t("密码不正确。") : t("登录服务暂不可用，请稍后重试。"));
         return;
       }
       if (!accept(data, true)) {
-        message("登录结果无效，请重试。");
+        message(t("登录结果无效，请重试。"));
         return;
       }
       // Native navigation also works without Service Worker or writable Cache Storage.
             root.location.replace(persistent ? "/" : "/?online=1");
     } catch {
-      message("暂时无法连接，请检查网络后重试。");
+      message(t("暂时无法连接，请检查网络后重试。"));
     } finally {
       if (button) button.disabled = false;
     }
@@ -326,7 +327,7 @@
     try {
       channel = new BroadcastChannel("myhome-device");
       channel.onmessage = event => {
-        if (event.data?.type === "locked") lock("此设备已在另一标签页退出，请重新登录。", false);
+        if (event.data?.type === "locked") lock(t("此设备已在另一标签页退出，请重新登录。"), false);
       };
     } catch {}
     for (const path of ["login", "password", "change-password"]) {
@@ -337,7 +338,7 @@
       logout();
     });
     if (!unlocked) {
-      message(read(PENDING) ? "已退出。联网后会完成服务器退出。" : read(BLOCK) ? "请重新输入密码。" : "");
+      message(read(PENDING) ? t("已退出。联网后会完成服务器退出。") : read(BLOCK) ? t("请重新输入密码。") : "");
       if (read(PENDING)) flushLogout();
     }
     if (unlocked) {
@@ -356,7 +357,7 @@
   };
   root.addEventListener("storage", event => {
     if (event.key === TRUST || event.key === BLOCK || event.key === PENDING) {
-      if (read(BLOCK) || read(PENDING) || !valid(read(TRUST))) lock("此设备已锁定，请重新登录。", false);
+      if (read(BLOCK) || read(PENDING) || !valid(read(TRUST))) lock(t("此设备已锁定，请重新登录。"), false);
     }
   });
   root.addEventListener("online", resume);
@@ -373,14 +374,14 @@
     if (disposed) {
       disposed = false;
       const saved = read(TRUST);
-      if (read(BLOCK) || read(PENDING) || !valid(saved)) lock("请重新登录。", false); else {
+      if (read(BLOCK) || read(PENDING) || !valid(saved)) lock(t("请重新登录。"), false); else {
         record = saved;
         expiry();
       }
       try {
         channel = new BroadcastChannel("myhome-device");
         channel.onmessage = e => {
-          if (e.data?.type === "locked") lock("此设备已锁定，请重新登录。", false);
+          if (e.data?.type === "locked") lock(t("此设备已锁定，请重新登录。"), false);
         };
       } catch {}
       resume();

@@ -72,6 +72,7 @@
   <div id="search-scrim" class="search-scrim" aria-hidden="true"></div>
   <dialog id="settings-dialog" aria-labelledby="settings-title" class="settings-dialog">
     <div class="dialog-header"><h2 id="settings-title">设置</h2><button id="settings-close" class="icon-button" type="button" aria-label="关闭设置"><span data-icon="close"></span></button></div>
+    <section class="settings-group"><label class="language-label" for="language-select">语言 / Language</label><select id="language-select" class="language-select" data-home-language="true" aria-label="Language"><option value="en">English</option><option value="zh-CN">简体中文</option></select></section>
     <section class="settings-group" aria-labelledby="settings-page-title"><h3 id="settings-page-title">页面</h3><div class="settings-actions">
       <button class="button button-quiet" id="edit-button" type="button" aria-pressed="false" title="显示或隐藏模块、入口、课程与学期的编辑操作"><span data-icon="edit"></span><span id="edit-label">整理</span></button>
       <button class="button button-quiet" id="manage-semesters" type="button" aria-haspopup="dialog" aria-controls="semester-manager"><span data-icon="calendar"></span>管理学期</button>
@@ -99,7 +100,7 @@
   <dialog id="appearance-dialog" aria-labelledby="appearance-title"><div class="dialog-header"><h2 id="appearance-title">日夜配色</h2><button id="appearance-close" class="icon-button" type="button" aria-label="关闭日夜配色"><span data-icon="close"></span></button></div><div class="appearance-readout"><output id="appearance-value" for="appearance-time">00:00</output><span id="appearance-color"></span></div><label class="appearance-label" for="appearance-time">拖动时间轴预览</label><input id="appearance-time" class="appearance-slider" type="range" min="0" max="1439" step="1" value="0"><div class="appearance-ticks" aria-hidden="true"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div><p id="appearance-note" class="field-hint" role="status"></p><div class="dialog-actions"><button id="appearance-auto" class="button button-secondary" type="button">恢复自动</button><button id="appearance-pin" class="button button-primary" type="button">固定此颜色</button></div></dialog>
   <input id="import-file" class="sr-only" type="file" accept="application/json,.json">
   <dialog id="mac-folder-dialog" aria-labelledby="mac-folder-title"><div class="dialog-header"><h2 id="mac-folder-title">Mac 资料设置</h2><button id="mac-folder-close" class="icon-button" type="button" aria-label="关闭 Mac 资料设置"><span data-icon="close"></span></button></div>
-    <p class="field-hint">所有课程共用一个快捷指令。本环境无法生成、签名或验证可导入的 .shortcut 文件，请按以下步骤创建；无需下载第三方工具。</p>
+    <p class="field-hint">所有课程共用一个快捷指令。按以下步骤创建。</p>
     <ol class="mac-setup-steps">
       <li>在 Mac“快捷指令”中新建一个快捷指令，名称必须是 <strong>My Home 打开资料</strong>。如已有这个名称的通用快捷指令，可直接检查其设置。</li>
       <li>添加“运行 Shell 脚本”（Run Shell Script）动作：Shell 选择 <strong>/bin/bash</strong>；“输入”选蓝色变量 <strong>快捷指令输入</strong>（Shortcut Input），类型设为<strong>文本</strong>；“传递输入”选<strong>作为参数</strong>（as arguments）。关闭“作为管理员运行”。将下方完整脚本粘入脚本框。不要把输入变量插入脚本文本，也不要添加“询问输入”“选择文件夹”或成功通知。输入为空时保持不提供输入，不设置为询问。</li>

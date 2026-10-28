@@ -42,11 +42,6 @@ test('invalid targets and storage failures retain input and draft, with no forma
  h.get('field-url').value='obsidian://open?vault=V&file=Note';h.get('field-name').value='New course name';h.ctx.localStorage.setItem=()=>{throw Error('storage unavailable')};submit(h);
  assert(h.get('editor').open);assert.equal(h.get('field-name').value,'New course name');assert.equal(h.get('field-url').value,'obsidian://open?vault=V&file=Note');assert(h.get('form-error').textContent.includes('storage'));assert.deepEqual(h.config(),before);
 });
-test('deletion confirmation stays within editor, reports module name/count and supports undo; special modules cannot delete',async()=>{
- const h=fixture();h.get('edit-button').click();const before=h.config();moduleAction(h,'affairs','删除');assert(h.get('editor-confirm').textContent.includes(before.modules[2].name));assert(h.get('editor-fields').inert);assert.equal(h.get('confirm-dialog').open,false);
- h.get('editor-confirm-yes').click();await settle();assert(!h.get('editor').open);assert(!h.config().modules.some(m=>m.id==='affairs'));h.doc.querySelector('.toast-undo').click();assert.deepEqual(h.config(),before);
- for(const id of ['learning','reading']){moduleAction(h,id,'编辑');assert(h.get('editor-delete').hidden);h.get('cancel-dialog').click()}
-});
 test('another tab prevents draft overwrite; discarding loads latest configuration without touching independent settings',async()=>{
  const h=fixture();h.store.set('myhome.search-engine','bing');h.get('edit-button').click();h.doc.querySelector('.course-launch').click();h.get('field-name').value='My draft';
  const next=h.config();next.semesters[0].courses[0].name='Other tab';h.store.set(KEY,JSON.stringify(next));h.ctx.window.dispatchEvent(new Evt('storage',{key:KEY,newValue:JSON.stringify(next)}));submit(h);
@@ -69,7 +64,9 @@ test('explicit blank exclusions preserve buttons, text, cards, articles, scrollb
  down(h,panel.querySelector('.course-grid'));move(h);assert(h.doc.querySelector('.module-placeholder'));h.doc.dispatchEvent(new Evt('keydown',{key:'Escape'}));
 });
 test('completed module drop saves order once, undo restores it, and only matching tail click is suppressed',()=>{
- const h=fixture();h.get('edit-button').click();const before=h.config(), grid=geometry(h), panel=h.get('module-panel-learning');down(h,panel);move(h);h.doc.dispatchEvent(new Evt('pointerup',{pointerId:7,clientX:100,clientY:890}));assert.equal(h.writes.length,1);assert.equal(h.config().modules.at(-1).id,'learning');
+ const h=fixture();h.get('edit-button').click();const before=h.config(), grid=geometry(h), panel=h.get('module-panel-learning');
+ for(const node of grid.children)node.getBoundingClientRect=()=>Object.create(node.rect);
+ down(h,panel);move(h);h.doc.dispatchEvent(new Evt('pointerup',{pointerId:7,clientX:100,clientY:890}));assert.equal(h.writes.length,1);assert.equal(h.config().modules.at(-1).id,'learning');
  const click=new Evt('click',{target:grid,detail:1,clientX:100,clientY:890});h.doc.dispatchEvent(click);assert(click.defaultPrevented);const next=new Evt('click',{target:h.get('add-module'),detail:1});h.doc.dispatchEvent(next);assert(!next.defaultPrevented);
  h.doc.querySelector('.toast-undo').click();assert.deepEqual(h.config(),before);
  down(h,panel);move(h);h.doc.dispatchEvent(new Evt('keydown',{key:'Escape'}));const unrelated=new Evt('click',{target:h.get('add-module'),detail:1});h.doc.dispatchEvent(unrelated);assert(!unrelated.defaultPrevented);
@@ -87,6 +84,7 @@ test('module menus disable unavailable moves and keyboard focus skips them',()=>
  const trigger=h.get('module-panel-learning').querySelector('.course-more-wrap').querySelector('button');trigger.dispatchEvent(new Evt('keydown',{key:'ArrowDown'}));
  const menu=h.get('module-menu-learning'), items=menu.children;assert(items[1].disabled);assert.equal(h.doc.activeElement,items[0]);
  menu.dispatchEvent(new Evt('keydown',{key:'ArrowDown'}));assert.equal(h.doc.activeElement,items[2]);menu.dispatchEvent(new Evt('keydown',{key:'Escape'}));assert.equal(h.doc.activeElement,trigger);
+ moduleAction(h,'learning','下移');assert.deepEqual(h.config().modules.slice(0,2).map(m=>m.id),['reading','learning']);
 });
 test('Reader articles cannot launch while organizing; user main-site edits remain ordinary configuration',async()=>{
  const h=fixture(), timers=[];h.ctx.setTimeout=(fn,ms)=>{timers.push({fn,ms});return 1};h.ctx.clearInterval=()=>{};

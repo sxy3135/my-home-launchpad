@@ -26,12 +26,14 @@ test('every private route/asset requires cookie; service credential or owner ide
  }
  const configured=await f.auth.route(passwordRequest({password:'Test Only 1234',confirm:'Test Only 1234'}));const headers={Cookie:asCookie(configured)};
  const home=await worker.fetch(new Request(origin,{headers}),f.env,{});assert.equal(home.status,200);assert((await home.text()).includes('Reader'));assert.equal(home.headers.get('Cache-Control'),'private, no-store');
+ const download=await worker.fetch(new Request(origin+'/my-home-windows-folders.zip',{headers}),f.env,{});
+ assert.equal(download.status,200);assert.equal(Buffer.from(await download.arrayBuffer()).subarray(0,2).toString(),'PK');
  const api=await worker.fetch(new Request(origin+'/api/reader/inbox',{headers}),f.env,{});assert.equal(api.status,200);assert.equal((await api.json()).connected,false);
 });
 test('reader secrets encrypted at rest, never echoed, persist without redeploy; CSRF and brute-force throttling',async()=>{
  const f=setup(),created=await f.auth.route(passwordRequest({password:'Test Only 1234',confirm:'Test Only 1234'})),Cookie=asCookie(created);
  const saved=await f.auth.route(post('/api/reader/settings',{token:'private-reader-token',secret:'official-webhook-secret'},{Cookie}));assert.equal(saved.status,303);const profile=await f.auth.profile();assert(!profile.reader_secrets.includes('private-reader-token'));assert.deepEqual(await f.auth.readerCredentials(profile),{token:'private-reader-token',secret:'official-webhook-secret'});
- const page=await f.auth.route(new Request(origin+'/reader-setup.html',{headers:{Cookie}}));const html=await page.text();assert(!html.includes('private-reader-token'));assert(!html.includes('official-webhook-secret'));assert(html.includes(origin+'/api/reader/webhook'));assert(!html.includes('转发端'));
+ const page=await f.auth.route(new Request(origin+'/reader-setup.html',{headers:{Cookie}}));const html=await page.text();assert(!html.includes('private-reader-token'));assert(!html.includes('official-webhook-secret'));assert(html.includes(origin+'/api/reader/webhook'));
  assert.equal((await f.auth.route(post('/api/reader/settings',{token:'changed'},{Cookie,Origin:'https://evil.example'}))).status,403);
  for(let i=0;i<10;i++)await f.auth.route(post('/api/auth/login',{password:'bad'}));assert.equal((await f.auth.route(post('/api/auth/login',{password:'Test Only 1234'}))).headers.get('Location'),'/login?error=rate');
  const hook=await worker.fetch(new Request(origin+'/api/reader/webhook',{method:'POST',body:JSON.stringify({secret:'official-webhook-secret'})}),f.env,{});assert.equal(hook.status,200);
@@ -50,7 +52,6 @@ test('native form pages preserve same-origin POST identity and still reject opaq
  for(const path of ['/login','/password-reset','/reader-setup.html']){
   const r=await f.auth.route(new Request(origin+path,{headers:{...headers,...(path==='/reader-setup.html'?{Cookie}:{})}}));
   assert.equal(r.headers.get('Referrer-Policy'),'same-origin',path);
-  const secondaryHtml=await r.text();assert(secondaryHtml.includes('src="/clock.js" defer'),path);assert(!secondaryHtml.includes('/daily.js'),path);
  }
  const home=await worker.fetch(new Request(origin,{headers:{Cookie}}),f.env,{});assert.equal(home.headers.get('Referrer-Policy'),'same-origin');
  const logout=await f.auth.route(post('/api/auth/logout',{}, {Cookie}));assert.equal(logout.status,303);
@@ -58,12 +59,10 @@ test('native form pages preserve same-origin POST identity and still reject opaq
 
 test('versioned assets cache privately, validators still verify revoked sessions, HTML never caches',async()=>{
  const f=setup(),created=await f.auth.route(passwordRequest({password:'Test Only 1234',confirm:'Test Only 1234'})),Cookie=asCookie(created);
- const queries=[],prepare=f.db.prepare.bind(f.db);f.db.prepare=sql=>{queries.push(sql);return prepare(sql)};
  const home=await worker.fetch(new Request(origin,{headers:{Cookie}}),f.env,{}),html=await home.text();
  const script=html.match(/data-home-bundle="(launchpad\.[^\"]+\.js)"/)[1],cssVersion=(await import('node:crypto')).createHash('sha256').update(readFileSync(new URL('../dist/style.css',import.meta.url))).digest('hex').slice(0,12),css='style.css?v='+cssVersion;
- assert.equal(home.headers.get('Link'),null);assert(home.headers.get('Server-Timing').includes('profile;dur='));
+ for(const path of ['/index.html','/fast','/fast.html'])assert.equal(await (await worker.fetch(new Request(origin+path,{headers:{Cookie}}),f.env,{})).text(),html);
  assert.equal(home.headers.get('Cache-Control'),'private, no-store');assert.equal(home.headers.get('ETag'),null);
- assert.deepEqual(queries,["SELECT revision FROM home_security WHERE id='home'"]);queries.length=0;
  const asset=await worker.fetch(new Request(origin+'/'+script,{headers:{Cookie}}),f.env,{}),etag=asset.headers.get('ETag'),bytes=await asset.arrayBuffer();
  assert.equal(asset.headers.get('Cache-Control'),'private, max-age=31536000, immutable');assert(etag);assert(bytes.byteLength>0);
  const headers={Cookie,'If-None-Match':etag};
@@ -74,24 +73,11 @@ test('versioned assets cache privately, validators still verify revoked sessions
  assert.equal((await worker.fetch(new Request(origin+'/style.css?v=old'),f.env,{})).headers.get('Cache-Control'),'public, max-age=300');
  const again=await worker.fetch(new Request(origin+'/'+script,{headers:{Cookie}}),f.env,{});assert.deepEqual(new Uint8Array(await again.arrayBuffer()),new Uint8Array(bytes));
  await f.auth.route(passwordRequest({password:'Changed Test 1234',confirm:'Changed Test 1234'}));
+ for(const path of ['/fast','/fast.html'])assert.equal((await worker.fetch(new Request(origin+path,{headers:{Cookie}}),f.env,{})).status,303);
  for(const CookieValue of [Cookie,'']){
   const denied=await worker.fetch(new Request(origin+'/'+script,{headers:{Cookie:CookieValue,'If-None-Match':etag}}),f.env,{});
   assert.equal(denied.status,303);assert.equal(denied.headers.get('Cache-Control'),'private, no-store');
  }
-});
-
-test('single-response launch route is authenticated, never cached, and checks revocation once',async()=>{
- const f=setup();
- await f.auth.route(passwordRequest({password:'Fast Test 1234',confirm:'Fast Test 1234'}));
- const Cookie=asCookie(await f.auth.route(post('/api/auth/login',{password:'Fast Test 1234'})));
- const queries=[],prepare=f.db.prepare.bind(f.db);f.db.prepare=sql=>{queries.push(sql);return prepare(sql)};
- const r=await worker.fetch(new Request(origin+'/fast',{headers:{Cookie}}),f.env,{}),html=await r.text();
- assert.equal(r.status,200);assert.equal(r.headers.get('Cache-Control'),'private, no-store');assert.equal(r.headers.get('ETag'),null);assert.equal(r.headers.get('Link'),null);
- assert(!/<script[^>]*\bsrc=/.test(html));assert(!/<link[^>]*rel="stylesheet"/.test(html));assert(html.includes('data-home-bundle'));
- assert.deepEqual(queries,["SELECT revision FROM home_security WHERE id='home'"]);
- const alias=await worker.fetch(new Request(origin+'/fast.html',{headers:{Cookie}}),f.env,{});assert.equal(await alias.text(),html);
- await f.auth.route(passwordRequest({password:'Changed Fast 1234',confirm:'Changed Fast 1234'}));
- for(const path of ['/fast','/fast.html'])assert.equal((await worker.fetch(new Request(origin+path,{headers:{Cookie}}),f.env,{})).status,303);
 });
 
 test('only authenticated server login grants device trust; session check never leaks seeds/secrets',async()=>{

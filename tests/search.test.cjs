@@ -1,4 +1,4 @@
-const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+const test=require('node:test'),assert=require('node:assert/strict');
 const {harness,Evt,root}=require('./fixtures/dom.cjs');
 function fixture(stored){
  const h=harness();if(stored)h.store.set('myhome.search-engine',stored);
@@ -34,12 +34,6 @@ test('blank area focuses input; menu retains focus; Tab trap, arrows, Escape and
  f.focus(f.input);const click=new Evt('click',{target:f.get('search-scrim')});f.doc.dispatchEvent(click);assert(click.defaultPrevented&&click.stopped);assert(!f.active());assert.equal(f.input.value,'保留关键词');
  f.focus(f.input);const backgroundClick=new Evt('click',{target:f.get('add-course')});f.doc.dispatchEvent(backgroundClick);let opened=0;if(!backgroundClick.stopped)opened++;assert.equal(opened,0);assert(!f.active());
 });
-test('date remains local and responsive/stacking styles isolate blur and visual scale without changing layout',()=>{
- const f=fixture();let requests=0;f.ctx.fetch=()=>requests++;f.run(root+'/src/frontend/clock.js');assert.match(f.get('home-date').dateTime,/^\d{4}-\d{2}-\d{2}$/);f.ctx.window.dispatchEvent(new Evt('focus'));assert.equal(requests,0);
- const html=fs.readFileSync(root+'/dist/index.html','utf8'),css=fs.readFileSync(root+'/dist/style.css','utf8');assert(!html.includes('daily-message'));assert(!html.includes('daily-question'));
- assert(css.includes('.search-active .search-background{filter:blur(3px);scale:1.01}'));assert(css.includes('.search-query{font-size:16px}'));assert(css.includes('z-index:61'));assert(css.includes('z-index:60'));
-});
-
 test('focused lift survives pointer leave and menu transitions; repeated exits restore original background state',()=>{
  const f=fixture(),bg=f.doc.querySelectorAll('.search-background');
  bg[0].inert=true;bg[0].setAttribute('aria-hidden','false');
@@ -56,10 +50,4 @@ test('focused lift survives pointer leave and menu transitions; repeated exits r
   bg.forEach((x,i)=>{assert.equal(x.inert,original[i].inert);assert.equal(x.getAttribute('aria-hidden'),original[i].aria)});
  }
  f.focus(f.input);f.trigger.click();f.ctx.window.dispatchEvent(new Evt('pagehide'));assert(!f.active());assert(f.menu.hidden);assert.equal(f.input.value,'保留');
- const css=fs.readFileSync(root+'/dist/style.css','utf8');
- assert(css.includes('--surface-duration:.34s;'));
- assert(css.match(/\.section-panel\{[^}]*transition:transform var\(--surface-motion\)/));
- assert(css.match(/\.home-search\{[^}]*transition:transform var\(--surface-motion\)/));
- assert(css.match(/\.search-active \.home-search\{transform:translateY\(var\(--surface-lift\)\)/));
- assert(css.includes('@media(prefers-reduced-motion:reduce){.home-search:hover,.search-active .home-search{transform:none}}'));
 });

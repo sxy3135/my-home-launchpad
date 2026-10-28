@@ -404,3 +404,5 @@ html:not([data-device="trusted"]) :is(#mac-folder-dialog,#reader-details-dialog)
 .editor-confirm{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--panel-background,#FFFFFF);margin-top:12px}
 .editor-confirm p{margin-bottom:12px}
 .editor-confirm .button{margin:0 8px 8px 0}
+
+.language-label{display:block;margin-bottom:8px;font-size:14px}.language-select{font:inherit;color:inherit;background:transparent;border:1px solid currentColor;border-radius:10px;padding:8px 12px;min-width:150px}.auth-language{margin:0 0 20px;display:flex;align-items:center;justify-content:flex-end;gap:10px}

@@ -55,7 +55,7 @@ async function navigate(request, event) {
   try {
     return await fetch(request);
   } catch {
-    return new Response('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>My Home</title><body><h1>My Home</h1><p>本地程序不完整，请联网后重新打开。配置仍保留在此浏览器。</p></body></html>', {
+    return new Response('<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>My Home</title><body><h1>My Home</h1><p lang="en">The offline app is incomplete. Reconnect and reopen My Home. Your configuration is still saved in this browser.</p><p lang="zh-CN">本地程序不完整，请联网后重新打开。配置仍保留在此浏览器。</p></body></html>', {
       status: 503,
       headers: {
         "Content-Type": "text/html; charset=utf-8",

@@ -14,7 +14,10 @@
     "configure:deploy": "node scripts/configure-deploy.mjs",
     "deploy": "node scripts/deploy.mjs",
     "db:migrate:remote": "node scripts/deploy.mjs --migrate",
-    "check:release": "node scripts/check-release.mjs"
+    "check:release": "node scripts/check-release.mjs",
+    "start": "node scripts/start.mjs",
+    "setup": "node scripts/start.mjs --prepare",
+    "setup:deploy": "node scripts/setup-deploy.mjs"
   },
   "devDependencies": {
     "drizzle-kit": "0.31.10",
@@ -23,7 +26,7 @@
     "wrangler": "4.149.0",
     "miniflare": "5.20261006.1-alpha"
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A self-hosted personal launchpad for courses, links, local folders and Readwise Reader.",
   "license": "MIT",
   "engines": {

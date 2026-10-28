@@ -15,6 +15,10 @@ The application uses native HTML, CSS, and JavaScript. `src/home.html` is a buil
 | `reader.js` | Reader state and same-origin API requests |
 | `search.js`, `theme.js`, `appearance.js`, `clock.js` | Search, color preferences, and time display |
 
+## Languages
+
+The frontend and authentication pages share `src/shared/messages.json`. Language controls update authored UI text. Browser-local language preferences are separate from course configuration. The complete offline page includes the translation code.
+
 ## Configuration
 
 The key `my-home-launchpad.config.v1` stores configuration format version 4. Imports accept versions 1–4. Appearance, search, and device trust use separate keys.
