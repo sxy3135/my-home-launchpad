@@ -1,0 +1,335 @@
+{
+  "config": {
+    "version": 3,
+    "localFoldersVersion": 2,
+    "sectionOrder": [
+      "learning",
+      "reading",
+      "affairs",
+      "investment",
+      "entertainment"
+    ],
+    "currentSemester": "semester-1",
+    "semesters": [
+      {
+        "id": "semester-1",
+        "name": "Example semester",
+        "courses": [
+          {
+            "id": "course-1",
+            "code": "TEST1",
+            "name": "示例课程 1",
+            "links": [
+              {
+                "id": "course-1-note",
+                "name": "主笔记",
+                "url": "obsidian://open?vault=Example&file=course-1-note",
+                "icon": "note",
+                "description": ""
+              },
+              {
+                "id": "course-1-gpt",
+                "name": "GPT 项目",
+                "url": "",
+                "icon": "chat",
+                "description": ""
+              },
+              {
+                "id": "course-1-files",
+                "name": "课程资料",
+                "url": "",
+                "icon": "folder",
+                "description": "",
+                "folderPaths": {
+                  "windows": "C:\\Courses\\course-1-files"
+                }
+              }
+            ]
+          },
+          {
+            "id": "course-2",
+            "code": "TEST2",
+            "name": "示例课程 2",
+            "links": [
+              {
+                "id": "course-2-note",
+                "name": "主笔记",
+                "url": "obsidian://open?vault=Example&file=course-2-note",
+                "icon": "note",
+                "description": ""
+              },
+              {
+                "id": "course-2-gpt",
+                "name": "GPT 项目",
+                "url": "",
+                "icon": "chat",
+                "description": ""
+              },
+              {
+                "id": "course-2-files",
+                "name": "课程资料",
+                "url": "",
+                "icon": "folder",
+                "description": "",
+                "folderPaths": {
+                  "windows": "C:\\Courses\\course-2-files"
+                }
+              }
+            ]
+          },
+          {
+            "id": "course-3",
+            "code": "TEST3",
+            "name": "示例课程 3",
+            "links": [
+              {
+                "id": "course-3-note",
+                "name": "主笔记",
+                "url": "obsidian://open?vault=Example&file=course-3-note",
+                "icon": "note",
+                "description": ""
+              },
+              {
+                "id": "course-3-gpt",
+                "name": "GPT 项目",
+                "url": "",
+                "icon": "chat",
+                "description": ""
+              },
+              {
+                "id": "course-3-files",
+                "name": "课程资料",
+                "url": "",
+                "icon": "folder",
+                "description": "",
+                "folderPaths": {
+                  "windows": "C:\\Courses\\course-3-files"
+                }
+              }
+            ]
+          },
+          {
+            "id": "course-4",
+            "code": "TEST4",
+            "name": "示例课程 4",
+            "links": [
+              {
+                "id": "course-4-note",
+                "name": "主笔记",
+                "url": "obsidian://open?vault=Example&file=course-4-note",
+                "icon": "note",
+                "description": ""
+              },
+              {
+                "id": "course-4-gpt",
+                "name": "GPT 项目",
+                "url": "",
+                "icon": "chat",
+                "description": ""
+              },
+              {
+                "id": "course-4-files",
+                "name": "课程资料",
+                "url": "",
+                "icon": "folder",
+                "description": "",
+                "folderPaths": {
+                  "windows": "C:\\Courses\\course-4-files"
+                }
+              }
+            ]
+          },
+          {
+            "id": "course-5",
+            "code": "TEST5",
+            "name": "示例课程 5",
+            "links": [
+              {
+                "id": "course-5-note",
+                "name": "主笔记",
+                "url": "obsidian://open?vault=Example&file=course-5-note",
+                "icon": "note",
+                "description": ""
+              },
+              {
+                "id": "course-5-gpt",
+                "name": "GPT 项目",
+                "url": "",
+                "icon": "chat",
+                "description": ""
+              },
+              {
+                "id": "course-5-files",
+                "name": "课程资料",
+                "url": "",
+                "icon": "folder",
+                "description": "",
+                "folderPaths": {
+                  "windows": "C:\\Courses\\course-5-files"
+                }
+              }
+            ]
+          },
+          {
+            "id": "course-6",
+            "code": "TEST6",
+            "name": "示例课程 6",
+            "links": [
+              {
+                "id": "course-6-note",
+                "name": "主笔记",
+                "url": "obsidian://open?vault=Example&file=course-6-note",
+                "icon": "note",
+                "description": ""
+              },
+              {
+                "id": "course-6-gpt",
+                "name": "GPT 项目",
+                "url": "",
+                "icon": "chat",
+                "description": ""
+              },
+              {
+                "id": "course-6-files",
+                "name": "课程资料",
+                "url": "",
+                "icon": "folder",
+                "description": "",
+                "folderPaths": {
+                  "windows": "C:\\Courses\\course-6-files"
+                }
+              }
+            ]
+          },
+          {
+            "id": "course-7",
+            "code": "TEST7",
+            "name": "示例课程 7",
+            "links": [
+              {
+                "id": "course-7-note",
+                "name": "主笔记",
+                "url": "obsidian://open?vault=Example&file=course-7-note",
+                "icon": "note",
+                "description": ""
+              },
+              {
+                "id": "course-7-gpt",
+                "name": "GPT 项目",
+                "url": "",
+                "icon": "chat",
+                "description": ""
+              },
+              {
+                "id": "course-7-files",
+                "name": "课程资料",
+                "url": "",
+                "icon": "folder",
+                "description": "",
+                "folderPaths": {
+                  "windows": "C:\\Courses\\course-7-files"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "sections": {
+      "learning": [
+        {
+          "id": "home",
+          "name": "Obsidian",
+          "url": "obsidian://open?vault=Example&file=home",
+          "icon": "note",
+          "description": ""
+        },
+        {
+          "id": "gpt",
+          "name": "ChatGPT",
+          "url": "https://example.com/gpt",
+          "icon": "chat",
+          "description": ""
+        },
+        {
+          "id": "course-portal",
+          "name": "Course portal",
+          "url": "",
+          "icon": "school",
+          "description": ""
+        },
+        {
+          "id": "cloud-files",
+          "name": "示例云盘",
+          "url": "https://example.com/cloud-files",
+          "icon": "folder",
+          "description": ""
+        },
+        {
+          "id": "student-system",
+          "name": "学生系统",
+          "url": "https://example.com/student-system",
+          "icon": "school",
+          "description": ""
+        }
+      ],
+      "reading": [
+        {
+          "id": "readwise",
+          "name": "Readwise Reader",
+          "url": "https://example.com/readwise",
+          "icon": "read",
+          "description": ""
+        }
+      ],
+      "affairs": [
+        {
+          "id": "mail-one",
+          "name": "Example mail 1",
+          "url": "https://example.com/mail-one",
+          "icon": "mail",
+          "description": ""
+        },
+        {
+          "id": "mail-two",
+          "name": "Example mail 2",
+          "url": "https://example.com/mail-two",
+          "icon": "mail",
+          "description": ""
+        },
+        {
+          "id": "school-website",
+          "name": "学校官网",
+          "url": "https://example.com/school-website",
+          "icon": "school",
+          "description": ""
+        }
+      ],
+      "investment": [
+        {
+          "id": "assets",
+          "name": "Assets",
+          "url": "https://example.com/assets",
+          "icon": "chart",
+          "description": ""
+        }
+      ],
+      "entertainment": [
+        {
+          "id": "video-one",
+          "name": "Example video 1",
+          "url": "https://example.com/video-one",
+          "icon": "play",
+          "description": ""
+        },
+        {
+          "id": "video-two",
+          "name": "Example video 2",
+          "url": "https://example.com/video-two",
+          "icon": "video",
+          "description": ""
+        }
+      ]
+    }
+  }
+}

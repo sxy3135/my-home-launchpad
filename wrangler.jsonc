@@ -1,0 +1,16 @@
+// Local development only. Remote commands use the ignored wrangler.deploy.json.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "my-home-local",
+  "main": "dist/server/index.js",
+  "compatibility_date": "2026-10-12",
+  "workers_dev": true,
+  "preview_urls": false,
+  "build": {"command": "node scripts/build-static.mjs"},
+  "d1_databases": [{
+    "binding": "DB",
+    "database_name": "my-home-local",
+    "database_id": "00000000-0000-0000-0000-000000000001",
+    "migrations_dir": "drizzle"
+  }]
+}

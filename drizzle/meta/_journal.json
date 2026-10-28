@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1791379493230,
+      "tag": "0000_cheerful_changeling",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1791379710382,
+      "tag": "0001_young_robbie_robertson",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791381234724,
+      "tag": "0002_lowly_spencer_smythe",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1791384693360,
+      "tag": "0003_late_captain_cross",
+      "breakpoints": true
+    }
+  ]
+}

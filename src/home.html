@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-CN" data-device="locked">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="你的学习、阅读、事务、投资与娱乐入口。">
+  <meta name="color-scheme" content="light">
+  <meta name="referrer" content="same-origin">
+  <title>MY HOME · 个人启动页</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231a3430'/%3E%3Cpath d='M8 16 16 9l8 7v9h-6v-7h-4v7H8z' fill='%23a6e4cb'/%3E%3C/svg%3E">
+  <!-- server-device-grant -->
+  <!-- home-head -->
+</head>
+<body>
+  <main id="device-login" class="auth-shell"><section class="section-panel auth-panel"><h1 class="brand">My Home</h1><p class="auth-copy">输入密码，打开你的 My Home。</p><form action="/api/auth/login" method="post"><label class="auth-label" for="device-password">密码</label><input class="auth-input" id="device-password" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required><p id="device-login-error" class="auth-error" role="alert"></p><button class="button button-primary auth-submit" type="submit">进入 My Home</button></form><p class="auth-hint">登录后此设备记住一年。退出会锁定页面，课程配置仍保留。</p><a class="auth-reset" href="/password-reset">忘记密码</a></section></main>
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="home-heading">
+        <h1 id="home-clock" class="brand search-background" aria-label="设备当前时间">--:--</h1>
+        <time id="home-date" class="home-date search-background"></time>
+        <form id="home-search" class="home-search" role="search" aria-label="网页搜索" tabindex="-1" autocomplete="off">
+          <div class="engine-picker">
+            <button id="search-engine" class="engine-toggle" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="search-engine-options" aria-label="搜索引擎：Google">
+              <span id="search-engine-icon" class="engine-brand" aria-hidden="true"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg></span><span id="search-engine-name" class="sr-only">Google</span><svg class="engine-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+            </button>
+            <div id="search-engine-options" class="engine-menu" role="listbox" aria-label="选择搜索引擎" hidden>
+              <button class="engine-option" type="button" role="option" data-engine="google" aria-selected="true" tabindex="-1" aria-label="Google" title="Google"><span class="engine-brand" aria-hidden="true"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/></svg></span><span class="sr-only">Google</span></button>
+              <button class="engine-option" type="button" role="option" data-engine="bing" aria-selected="false" tabindex="-1" aria-label="Bing" title="Bing"><span class="engine-brand" aria-hidden="true"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.176 15.406a6.48 6.48 0 01-1.736 4.414c1.338-1.47.803-3.869-1.003-4.635-.862-.305-2.488-.85-3.367-1.158a1.834 1.834 0 01-.932-.818c-.381-.975-1.163-2.968-1.548-3.948-.095-.285-.31-.625-.265-.938.046-.598.724-1.003 1.276-.754l3.682 1.888c.621.292 1.305.692 1.796 1.172a6.486 6.486 0 012.097 4.777zm-1.44 1.888c-.264-1.194-1.135-1.744-2.216-2.028-1.527.902-4.853 2.878-6.952 4.13-1.103.68-2.13 1.35-2.919 1.242a2.866 2.866 0 01-2.77-2.325c-.012-.048-.008-.03-.001.01a6.4 6.4 0 00.947 2.653 6.498 6.498 0 005.486 3.022c1.908.062 3.536-1.153 5.099-2.096.292-.188.804-.496 1.332-.831l1.423-1.51c.553-.577.764-1.426.571-2.267zm-12.04 2.97c.422 0 .822-.1 1.173-.29.355-.215.964-.579 1.7-1.018L9.57 4.502c0-.99-.497-1.864-1.257-2.382-.08-.059-2.91-1.901-2.99-1.956-.605-.432-1.523.045-1.5.797v14.887l.417 2.36a2.488 2.488 0 002.455 2.056z"/></svg></span><span class="sr-only">Bing</span></button>
+              <button class="engine-option" type="button" role="option" data-engine="baidu" aria-selected="false" tabindex="-1" aria-label="百度" title="百度"><span class="engine-brand" aria-hidden="true"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.154 0C7.71 0 6.54 1.658 6.54 3.707c0 2.051 1.171 3.71 2.615 3.71 1.446 0 2.614-1.659 2.614-3.71C11.768 1.658 10.6 0 9.154 0zm7.025.594C14.86.58 13.347 2.589 13.2 3.927c-.187 1.745.25 3.487 2.179 3.735 1.933.25 3.175-1.806 3.422-3.364.252-1.555-.995-3.364-2.362-3.674a1.218 1.218 0 0 0-.261-.03zM3.582 5.535a2.811 2.811 0 0 0-.156.008c-2.118.19-2.428 3.24-2.428 3.24-.287 1.41.686 4.425 3.297 3.864 2.617-.561 2.262-3.68 2.183-4.362-.125-1.018-1.292-2.773-2.896-2.75zm16.534 1.753c-2.308 0-2.617 2.119-2.617 3.616 0 1.43.121 3.425 2.988 3.362 2.867-.063 2.553-3.238 2.553-3.988 0-.745-.62-2.99-2.924-2.99zm-8.264 2.478c-1.424.014-2.708.925-3.323 1.947-1.118 1.868-2.863 3.05-3.112 3.363-.25.309-3.61 2.116-2.864 5.42.746 3.301 3.365 3.237 3.365 3.237s1.93.19 4.171-.31c2.24-.495 4.17.123 4.17.123s5.233 1.748 6.665-1.616c1.43-3.364-.808-5.109-.808-5.109s-2.99-2.306-4.736-4.798c-1.072-1.665-2.348-2.268-3.528-2.257zm-2.234 3.84l1.542.024v8.197H7.758c-1.47-.291-2.055-1.292-2.13-1.462-.072-.173-.488-.976-.268-2.343.635-2.049 2.447-2.196 2.447-2.196h1.81zm3.964 2.39v3.881c.096.413.612.488.612.488h1.614v-4.343h1.689v5.782h-3.915c-1.517-.39-1.59-1.465-1.59-1.465v-4.317zm-5.458 1.147c-.66.197-.978.708-1.05.928-.076.22-.247.78-.1 1.269.294 1.095 1.248 1.144 1.248 1.144h1.37v-3.34z"/></svg></span><span class="sr-only">百度</span></button>
+              <button class="engine-option" type="button" role="option" data-engine="reader" aria-selected="false" tabindex="-1" aria-label="Reader" title="Reader"><span class="engine-brand" aria-hidden="true"><svg class="reader-search-icon" aria-hidden="true" focusable="false" viewBox="0 0 24 24"><path d="M12 7v14m0-14C9 4 5 4 2 5v14c3-1 7-1 10 2m0-14c3-3 7-3 10-2v14c-3-1-7-1-10 2"/></svg></span><span class="sr-only">Reader</span></button>
+            </div>
+          </div>
+          <input id="search-query" class="search-query" type="search" aria-label="搜索关键词" placeholder="搜索" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+          <svg class="search-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg>
+        </form>
+      </div>
+
+    </header>
+  <div id="layout-toolbar" class="layout-toolbar editing-only search-background"><button id="add-module" class="button button-secondary" type="button"><span data-icon="plus"></span>新增模块</button><button id="finish-editing" class="button button-secondary" type="button">完成</button><span class="field-hint">点击内容编辑，按住模块空白处拖动。</span></div>
+  <p id="config-recovery" class="config-recovery search-background" role="alert" hidden></p>
+  <main id="module-grid" class="workspace module-grid search-background">
+    <section id="module-learning" class="learning-section section-panel" aria-labelledby="learning-title">
+      <div class="section-heading"><h2 id="learning-title">学习</h2></div>
+      <div class="module-scroll-frame"><div class="module-scroll" tabindex="0" aria-label="学习内容"><div class="module-content">
+      <div id="study-links" class="section-links study-links"></div>
+      <div class="course-toolbar">
+        <div class="course-caption"><span>课程</span><span id="course-count" class="count"></span></div>
+        <div class="semester-controls">
+          <div id="semester-picker"></div>
+        </div>
+      </div>
+      <div id="courses" class="course-grid"></div>
+      </div></div><span class="scroll-fade scroll-fade-top" aria-hidden="true"></span><span class="scroll-fade scroll-fade-bottom" aria-hidden="true"></span></div>
+    </section>
+    <section id="module-reading" class="link-section section-panel" aria-labelledby="reading-title">
+      <div class="section-heading"><h2 id="reading-title">阅读</h2></div>
+      <div class="module-scroll-frame"><div class="module-scroll" tabindex="0" aria-label="阅读内容"><div class="module-content">
+        <div id="reading-links" class="section-links study-links"></div>
+        <div class="reader-widget" aria-label="Reader Inbox">
+          <div class="reader-widget-heading module-toolbar"><a class="reader-home" href="https://read.readwise.io/" target="_blank" rel="noopener noreferrer" title="打开 Reader 主网站">Reader <span>Inbox</span></a><button id="reader-refresh" class="icon-button reader-refresh" type="button" aria-label="重新核对 Inbox" title="重新核对 Reader Inbox"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.6 8a7 7 0 0 1 11.6-2L20 9M4 15l2.8 3A7 7 0 0 0 18.4 16"/></svg></button></div>
+          <div id="reader-items" class="reader-items"></div>
+          <p id="reader-status" class="reader-status" role="status">正在读取 Inbox…</p>
+          <a id="reader-setup-link" class="reader-setup-link" href="./reader-setup.html" target="_blank" rel="noopener noreferrer" hidden>接入设置</a>
+        </div>
+      </div></div><span class="scroll-fade scroll-fade-top" aria-hidden="true"></span><span class="scroll-fade scroll-fade-bottom" aria-hidden="true"></span></div>
+    </section>
+  </main>
+  <footer class="search-background"><div class="footer-info"><div class="save-state"><span class="save-dot" aria-hidden="true"></span><span id="save-status" role="status">保存在此浏览器</span></div><span>更换浏览器前，记得导出配置。</span><span id="device-status" role="status"></span></div>
+      <div class="footer-actions"><button id="settings-button" class="icon-button" type="button" aria-label="设置" title="设置" aria-haspopup="dialog" aria-controls="settings-dialog" aria-expanded="false"><span data-icon="settings"></span></button></div>
+  </footer>
+  </div>
+  <div id="search-scrim" class="search-scrim" aria-hidden="true"></div>
+  <dialog id="settings-dialog" aria-labelledby="settings-title" class="settings-dialog">
+    <div class="dialog-header"><h2 id="settings-title">设置</h2><button id="settings-close" class="icon-button" type="button" aria-label="关闭设置"><span data-icon="close"></span></button></div>
+    <section class="settings-group" aria-labelledby="settings-page-title"><h3 id="settings-page-title">页面</h3><div class="settings-actions">
+      <button class="button button-quiet" id="edit-button" type="button" aria-pressed="false" title="显示或隐藏模块、入口、课程与学期的编辑操作"><span data-icon="edit"></span><span id="edit-label">整理</span></button>
+      <button class="button button-quiet" id="manage-semesters" type="button" aria-haspopup="dialog" aria-controls="semester-manager"><span data-icon="calendar"></span>管理学期</button>
+      <button class="button button-quiet" id="appearance-button" type="button" aria-haspopup="dialog" aria-controls="appearance-dialog">外观<span id="appearance-state" class="appearance-state">自动</span></button>
+    </div></section>
+    <section class="settings-group" aria-labelledby="settings-folders-title"><h3 id="settings-folders-title">资料</h3><div class="settings-actions">
+      <a id="windows-folder-tool" class="button button-quiet" href="./my-home-windows-folders.zip" download title="Windows 只需安装一次：完整解压后运行 install.cmd">Windows 资料工具</a>
+      <button id="mac-folder-settings" class="button button-quiet" type="button" aria-haspopup="dialog" aria-controls="mac-folder-dialog">Mac 资料设置</button>
+    </div></section>
+    <section class="settings-group" aria-labelledby="settings-backup-title"><h3 id="settings-backup-title">配置备份</h3><div class="settings-actions">
+      <button id="export-button" class="button button-quiet" type="button"><span data-icon="download"></span>导出配置</button><button id="import-button" class="button button-quiet" type="button"><span data-icon="upload"></span>导入配置</button>
+    </div></section>
+    <section class="settings-group" aria-labelledby="settings-account-title"><h3 id="settings-account-title">连接与账户</h3><div class="settings-actions">
+      <a class="button button-quiet" href="/password-change">修改密码</a><a id="connection-settings" class="button button-quiet" href="/reader-setup.html">连接设置</a><form class="footer-logout" method="post" action="/api/auth/logout"><button class="button button-quiet danger" type="submit">退出登录</button></form>
+    </div></section>
+  </dialog>
+  <dialog id="editor" aria-labelledby="dialog-title"><div class="dialog-header"><h2 id="dialog-title"></h2><button class="icon-button" id="close-dialog" type="button" aria-label="关闭"><span data-icon="close"></span></button></div><form id="editor-form"><div id="editor-fields"></div><p id="form-error" class="form-error" role="alert"></p><div class="dialog-actions"><button type="button" class="button button-quiet danger" id="editor-delete" hidden><span data-icon="trash"></span>删除</button><button type="button" class="button button-quiet" id="cancel-dialog">取消</button><button type="submit" class="button button-primary">保存</button></div></form></dialog>
+  <dialog id="semester-manager" aria-labelledby="semester-manager-title"><div class="dialog-header"><h2 id="semester-manager-title">管理学期</h2><button class="icon-button" id="close-semester-manager" aria-label="关闭"><span data-icon="close"></span></button></div><div class="semester-manager-toolbar"><button class="button button-secondary" id="new-semester"><span data-icon="plus"></span>新增学期</button></div><div id="semester-list" class="semester-list"></div><p class="field-hint semester-hint">至少保留一个学期。删除学期只会移除启动页中的课程入口。</p><div class="dialog-actions"><button class="button button-primary" id="done-semesters">完成</button></div></dialog>
+  <dialog id="reader-details-dialog" aria-labelledby="reader-details-heading">
+    <div class="dialog-header"><h2 id="reader-details-heading">文章信息</h2><button id="reader-details-close" class="icon-button" type="button" aria-label="关闭文章信息"><span data-icon="close"></span></button></div>
+    <dl class="reader-details"><div><dt>标题</dt><dd id="reader-details-title"></dd></div><div><dt>来源</dt><dd id="reader-details-source"></dd></div><div><dt>保存时间</dt><dd id="reader-details-time"></dd></div></dl>
+    <div class="dialog-actions"><a id="reader-details-open" class="button button-primary" target="_blank" rel="noopener noreferrer">打开文章</a></div>
+  </dialog>
+  <dialog id="confirm-dialog" aria-labelledby="confirm-title"><div class="dialog-header"><h2 id="confirm-title">确认操作</h2></div><p id="confirm-text"></p><div class="dialog-actions"><button id="confirm-cancel" class="button button-quiet">取消</button><button id="confirm-yes" class="button button-primary">确认</button></div></dialog>
+  <dialog id="appearance-dialog" aria-labelledby="appearance-title"><div class="dialog-header"><h2 id="appearance-title">日夜配色</h2><button id="appearance-close" class="icon-button" type="button" aria-label="关闭日夜配色"><span data-icon="close"></span></button></div><div class="appearance-readout"><output id="appearance-value" for="appearance-time">00:00</output><span id="appearance-color"></span></div><label class="appearance-label" for="appearance-time">拖动时间轴预览</label><input id="appearance-time" class="appearance-slider" type="range" min="0" max="1439" step="1" value="0"><div class="appearance-ticks" aria-hidden="true"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>24:00</span></div><p id="appearance-note" class="field-hint" role="status"></p><div class="dialog-actions"><button id="appearance-auto" class="button button-secondary" type="button">恢复自动</button><button id="appearance-pin" class="button button-primary" type="button">固定此颜色</button></div></dialog>
+  <input id="import-file" class="sr-only" type="file" accept="application/json,.json">
+  <dialog id="mac-folder-dialog" aria-labelledby="mac-folder-title"><div class="dialog-header"><h2 id="mac-folder-title">Mac 资料设置</h2><button id="mac-folder-close" class="icon-button" type="button" aria-label="关闭 Mac 资料设置"><span data-icon="close"></span></button></div>
+    <p class="field-hint">所有课程共用一个快捷指令。本环境无法生成、签名或验证可导入的 .shortcut 文件，请按以下步骤创建；无需下载第三方工具。</p>
+    <ol class="mac-setup-steps">
+      <li>在 Mac“快捷指令”中新建一个快捷指令，名称必须是 <strong>My Home 打开资料</strong>。如已有这个名称的通用快捷指令，可直接检查其设置。</li>
+      <li>添加“运行 Shell 脚本”（Run Shell Script）动作：Shell 选择 <strong>/bin/bash</strong>；“输入”选蓝色变量 <strong>快捷指令输入</strong>（Shortcut Input），类型设为<strong>文本</strong>；“传递输入”选<strong>作为参数</strong>（as arguments）。关闭“作为管理员运行”。将下方完整脚本粘入脚本框。不要把输入变量插入脚本文本，也不要添加“询问输入”“选择文件夹”或成功通知。输入为空时保持不提供输入，不设置为询问。</li>
+      <li>如脚本无法运行，在“快捷指令 → 设置 → 高级”开启“允许运行脚本”。</li>
+      <li>在本页编辑“资料”，选择“本地资料文件夹”，填写 Mac 路径。Finder 选中文件夹后可按 <strong>⌥⌘C</strong> 复制路径。网站保存原始路径，不用自己编码。</li>
+      <li>首次请在<strong>普通 Safari 窗口</strong>点击“测试打开”。若打开快捷指令应用的提示提供“始终允许”，请选择；快捷指令请求必要数据访问权限时也选择“始终允许”。不同 Safari / macOS 版本的提示可能不同，请按实际弹窗授权。</li>
+      <li>确认 Finder 中打开的是目标文件夹后，在编辑窗口点击“保存”。以后逐门课程填写路径即可，共用此快捷指令。路径不存在、权限拒绝或打开失败由快捷指令提示；成功时没有额外弹窗。</li>
+    </ol>
+    <p class="field-hint">“测试打开”只发出请求，网页不能确认安装、授权或打开结果。手机和平板不支持此 Mac 文件夹方案。课程标题复用这一条资料快捷指令，完成后通过系统回调打开笔记；不需要另一条课程快捷指令。</p>
+    <p class="field-hint">如果“打开资料”也弹出或导出 stdout：在 Run Shell Script 后添加 <strong>Nothing</strong> 动作，再添加 <strong>Stop and Output</strong>，输出选 Nothing，If there’s nowhere to output 选 <strong>Do Nothing</strong>。不要将 Script Result 交给 Save File、Open File 或 Quick Look。已能正常打开且没有输出文件时，无需修改。</p>
+    <label class="mac-script-label" for="mac-folder-script">完整脚本（只打开文件夹）</label><textarea id="mac-folder-script" class="mac-folder-script" readonly spellcheck="false" aria-label="Mac 打开资料完整脚本"><!-- mac-folder-script --></textarea>
+    <div class="dialog-actions"><button id="mac-folder-copy" class="button button-secondary" type="button">复制脚本</button><button id="mac-folder-done" class="button button-primary" type="button">完成</button></div><p id="mac-folder-copy-status" class="field-hint" role="status"></p>
+    <p class="field-hint"><a href="https://support.apple.com/zh-cn/guide/shortcuts-mac/apd624386f42/mac" target="_blank" rel="noopener noreferrer">Apple 调用说明</a> · <a href="https://support.apple.com/zh-cn/guide/shortcuts-mac/apdfeb05586f/mac" target="_blank" rel="noopener noreferrer">脚本权限</a></p>
+  </dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <!-- home-program -->
+</body>
+</html>

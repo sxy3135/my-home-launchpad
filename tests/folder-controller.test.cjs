@@ -1,0 +1,17 @@
+const {moduleAction: homeAction, chooseEntry, discard}=require("./fixtures/editor-actions.cjs");
+const assert=require('node:assert/strict');
+const {harness,Evt,root}=require('./fixtures/dom.cjs');
+const json=x=>JSON.parse(JSON.stringify(x));
+const h=harness(),Mpath=root+'/src/frontend/model.js';h.run(Mpath);const M=h.ctx.window.HomeModel;
+const old=JSON.parse(JSON.stringify(M.restoreConfig(require("./fixtures/config.json").config)));old.localFoldersVersion=1;h.store.set('my-home-launchpad.config.v1',JSON.stringify(old));h.run(root+'/src/frontend/icons.js');h.run(root+'/src/frontend/ui.js');h.run(root+'/src/frontend/interactions.js');h.run(root+'/src/frontend/app.js');
+const saved=JSON.parse(h.store.get('my-home-launchpad.config.v1'));assert.equal(saved.localFoldersVersion,2);
+const materialLinks=()=>h.doc.querySelectorAll('.course-link').filter(e=>e.attrs['aria-label']==='课程资料');
+assert.equal(materialLinks().length,7);materialLinks().forEach((e,i)=>assert.equal(Buffer.from(e.href.split('open/')[1],'hex').toString('utf8'),saved.semesters[0].courses[i].links[2].folderPaths.windows));
+assert.equal(h.doc.querySelectorAll('.editing-controls').reduce((n,e)=>n+e.children.length,0),0);
+h.doc.getElementById('edit-button').click();materialLinks()[0].click();assert.equal(h.doc.getElementById('field-url-windows').value,saved.semesters[0].courses[0].links[2].folderPaths.windows);
+h.doc.getElementById('field-url-windows').value='D:\\New Folder\\Chinese 课件 & Notes';h.doc.getElementById('editor-form').dispatchEvent(new Evt('submit'));if(h.doc.getElementById('editor').open)console.log('FORM ERROR:',h.doc.getElementById('form-error').textContent);assert(!h.doc.getElementById('editor').open);assert.equal(Buffer.from(materialLinks()[0].href.split('open/')[1],'hex').toString('utf8'),'D:\\New Folder\\Chinese 课件 & Notes');
+h.doc.getElementById('manage-semesters').click();h.doc.getElementById('new-semester').click();h.doc.getElementById('field-name').value='Semester 2';h.doc.getElementById('editor-form').dispatchEvent(new Evt('submit'));h.doc.getElementById('done-semesters').click();assert.equal(h.doc.querySelectorAll('.course-card').length,0);
+homeAction(h,'learning','添加课程');h.doc.getElementById('field-name').value='New semester course';chooseEntry(h,2);h.doc.getElementById('field-url-windows').value='E:\\Semester 2\\New Course';h.doc.getElementById('editor-form').dispatchEvent(new Evt('submit'));assert.equal(h.doc.querySelectorAll('.course-card').length,1);assert.equal(Buffer.from(materialLinks()[0].href.split('open/')[1],'hex').toString('utf8'),'E:\\Semester 2\\New Course');
+materialLinks()[0].click();h.doc.getElementById('field-url-windows').value='C:\\..\\Windows';h.doc.getElementById('editor-form').dispatchEvent(new Evt('submit'));assert(h.doc.getElementById('editor').open);assert(h.doc.getElementById('form-error').textContent);discard(h);
+h.doc.querySelectorAll('.course-launch')[0].click();h.doc.getElementById('editor-delete').click();h.doc.getElementById('editor-confirm-yes').click();
+setImmediate(()=>{assert.equal(h.doc.querySelectorAll('.course-card').length,0);assert.equal(JSON.parse(h.store.get('my-home-launchpad.config.v1')).semesters[1].courses.length,0);console.log('PASS: actual controllers migrate browser config, seven encoded anchors, editable raw paths, semester creation, course creation, invalid-path errors and confirmed course removal');});

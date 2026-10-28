@@ -1,0 +1,62 @@
+{
+  "version": 4,
+  "localFoldersVersion": 2,
+  "currentSemester": "demo-semester",
+  "semesters": [
+    {
+      "id": "demo-semester",
+      "name": "Example semester",
+      "courses": [
+        {
+          "id": "demo-course",
+          "code": "DEMO101",
+          "name": "Example course",
+          "links": [
+            {
+              "id": "demo-course-page",
+              "name": "Course website",
+              "url": "https://example.com/course",
+              "icon": "school",
+              "description": "Replace this placeholder with your course URL.",
+              "launchRole": "none"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "modules": [
+    {
+      "id": "learning",
+      "type": "learning",
+      "name": "Study",
+      "size": "wide",
+      "heightUnits": 4,
+      "links": []
+    },
+    {
+      "id": "reading",
+      "type": "reader",
+      "name": "Reading",
+      "size": "medium",
+      "heightUnits": 3,
+      "links": []
+    },
+    {
+      "id": "affairs",
+      "type": "shortcuts",
+      "name": "Shortcuts",
+      "size": "small",
+      "heightUnits": 3,
+      "links": [
+        {
+          "id": "demo-website",
+          "name": "Example website",
+          "url": "https://example.com/",
+          "icon": "link",
+          "description": "A placeholder you can edit or remove."
+        }
+      ]
+    }
+  ]
+}

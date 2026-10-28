@@ -1,0 +1,20 @@
+const test=require('node:test'),assert=require('node:assert/strict');
+const {harness,Evt,root}=require('./fixtures/dom.cjs');
+test('settings owns footer actions; child dialogs replace parent, editing survives reopen, cancellation and lock clear state',()=>{
+ const h=harness(),get=id=>h.doc.getElementById(id);let requests=0;h.ctx.fetch=()=>{requests++;throw Error('Unexpected request')};
+ for(const file of ['icons.js','model.js','ui.js','interactions.js','module-layout.js','app.js','theme.js','appearance.js'])h.run(root+'/src/frontend/'+file);
+ const before=JSON.stringify(h.ctx.window.HomeModel.restoreConfig(require("./fixtures/config.json").config));
+ assert.deepEqual(h.doc.querySelector('.footer-actions').querySelectorAll('button').map(x=>x.id),['settings-button']);
+ get('settings-button').click();assert(get('settings-dialog').open);assert.equal(get('settings-button').getAttribute('aria-expanded'),'true');
+ get('edit-button').click();assert(!get('settings-dialog').open);assert(h.doc.body.className.includes('editing'));assert.equal(h.doc.activeElement,get('settings-button'));
+ get('settings-button').click();assert.equal(get('edit-label').textContent,'完成整理');get('manage-semesters').click();assert(!get('settings-dialog').open);assert(get('semester-manager').open);
+ get('done-semesters').click();get('semester-manager').dispatchEvent(new Evt('close'));assert.equal(h.doc.activeElement,get('settings-button'));
+ get('settings-button').click();get('mac-folder-settings').click();assert(!get('settings-dialog').open);assert(get('mac-folder-dialog').open);get('mac-folder-done').click();get('mac-folder-dialog').dispatchEvent(new Evt('close'));
+ get('settings-button').click();get('appearance-button').click();assert(!get('settings-dialog').open);assert(get('appearance-dialog').open);get('appearance-time').value='1260';get('appearance-time').dispatchEvent(new Evt('input'));assert.equal(h.ctx.window.HomeTheme.preview,1260);get('appearance-close').click();get('appearance-dialog').dispatchEvent(new Evt('close'));assert.equal(h.ctx.window.HomeTheme.preview,null);assert.equal(h.doc.activeElement,get('settings-button'));
+ get('settings-button').click();get('import-button').click();assert(!get('settings-dialog').open);assert.equal(get('settings-button').getAttribute('aria-expanded'),'false');
+ get('settings-button').click();const escape=new Evt('cancel');get('settings-dialog').dispatchEvent(escape);assert(escape.defaultPrevented);assert(!get('settings-dialog').open);assert.equal(h.doc.activeElement,get('settings-button'));
+ get('settings-button').click();get('settings-dialog').dispatchEvent(new Evt('click',{clientX:0,clientY:0}));assert(!get('settings-dialog').open);
+ get('settings-button').click();get('edit-button').click();assert(!h.doc.body.className.includes('editing'));assert.equal(get('settings-button').getAttribute('aria-label'),'设置');
+ assert.equal(requests,0);assert.equal(h.writes.length,0);assert.equal(JSON.stringify(h.ctx.window.HomeModel.restoreConfig(require("./fixtures/config.json").config)),before);
+ get('settings-button').click();h.ctx.window.HomeDevice.unlocked=false;h.ctx.window.dispatchEvent(new Evt('myhome:lock'));assert(!get('settings-dialog').open);assert.equal(get('settings-button').getAttribute('aria-expanded'),'false');assert.equal(get('module-grid').children.length,0);
+});

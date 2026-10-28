@@ -1,0 +1,32 @@
+{
+  "name": "my-home-launchpad",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/cloudflare.mjs dev --local --ip 127.0.0.1",
+    "build": "node scripts/build-static.mjs",
+    "test": "node --test tests/*.test.cjs tests/*.test.mjs",
+    "dev:worker": "npm run dev",
+    "db:migrate:local": "node scripts/cloudflare.mjs d1 migrations apply my-home-local --local",
+    "deploy:check": "node scripts/cloudflare.mjs deploy --dry-run",
+    "secrets:local": "node scripts/create-local-secrets.mjs",
+    "test:worker": "node --test tests/integration/*.test.mjs",
+    "cf": "node scripts/cloudflare.mjs",
+    "configure:deploy": "node scripts/configure-deploy.mjs",
+    "deploy": "node scripts/deploy.mjs",
+    "db:migrate:remote": "node scripts/deploy.mjs --migrate",
+    "check:release": "node scripts/check-release.mjs"
+  },
+  "devDependencies": {
+    "drizzle-kit": "0.31.10",
+    "drizzle-orm": "0.45.2",
+    "terser": "5.44.0",
+    "wrangler": "4.149.0",
+    "miniflare": "5.20261006.1-alpha"
+  },
+  "version": "0.1.0",
+  "description": "A self-hosted personal launchpad for courses, links, local folders and Readwise Reader.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24 <25"
+  }
+}

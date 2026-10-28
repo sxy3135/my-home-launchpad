@@ -1,0 +1,32 @@
+const assert=require('node:assert/strict');
+const {harness,Evt,root}=require('./fixtures/dom.cjs');
+const json=x=>JSON.parse(JSON.stringify(x));
+const h=harness(),W=h.ctx.window,Mkey='my-home-launchpad.config.v1';
+for(const file of ['icons','model','ui','interactions','module-layout'])h.run(root+'/src/frontend/'+file+'.js');
+const M=W.HomeModel,I=W.HomeInteractions;
+let config=M.restoreConfig(require("./fixtures/config.json").config);const legacy=json(require('./fixtures/config.json').config);delete legacy.sectionOrder;legacy.semesters[0].courses.reverse();legacy.sections.learning.reverse();
+h.store.set(Mkey,JSON.stringify(legacy));h.run(root+'/src/frontend/app.js');
+assert.deepEqual(json(M.restoreConfig(legacy)).modules.map(m=>m.id),json(config.modules.map(m=>m.id)));
+assert.equal(h.doc.querySelectorAll('.sort-handle').length,0);
+assert.equal(h.doc.querySelectorAll('.course-launch').length,7);
+assert.equal(h.doc.querySelectorAll('.course-title')[0].textContent,legacy.semesters[0].courses[0].name);
+h.doc.querySelectorAll('.course-launch')[0].click();assert.equal(W.opened.length,2);assert(W.opened[0][0].startsWith('obsidian:'));assert(W.opened[1][0].startsWith('myhome-folder:'));assert(!h.doc.getElementById('toast').textContent.includes('成功'));
+h.doc.querySelectorAll('.course-launch')[0].click();assert.equal(W.opened.length,2);
+h.doc.getElementById('edit-button').click();assert.equal(h.doc.querySelectorAll('.sort-handle').length,0);
+const grid=h.doc.getElementById('module-grid');assert.deepEqual(grid.children.map(e=>e.dataset.moduleId),json(config.modules.map(m=>m.id)));
+require('./fixtures/editor-actions.cjs').moduleAction(h,'learning','下移');
+let saved=JSON.parse(h.store.get(Mkey));assert.deepEqual(saved.modules.map(m=>m.id),['reading','learning','affairs','investment','entertainment']);
+h.doc.querySelectorAll('.course-launch')[0].click();assert(h.doc.getElementById('editor').open);assert.equal(W.opened.length,2);
+h.doc.getElementById('cancel-dialog').click();
+// Target canonicalization, blank skipping, exact order including future buttons.
+const links=[{name:'blank',url:''},{name:'note',url:'obsidian://open?vault=Example&file=Sample'},{name:'same note',url:'obsidian://open?file=Sample.md&vault=Example'},{name:'folder',url:'C:\\Courses\\course-1-files'},{name:'same folder',url:M.folderUri('C:\\Courses\\course-1-files')},{name:'web',url:'https://EXAMPLE.com:443/a'},{name:'same web',url:'https://example.com/a'},{name:'future',url:'https://example.com/new'}];
+assert.deepEqual(json(M.courseLaunchTargets(links)).map(t=>t.name),['note','folder','web','future']);
+let calls=[],now=0;const browser={open:(u,t)=>{calls.push([u,t]);if(u==='about:blank'&&calls.length===2)return null;return {opener:'unsafe',location:{replace:u=>calls.at(-1)[0]=u}}}};
+const launch=I.createLauncher(browser,()=>now),targets=[{kind:'external',url:'obsidian://open'},{kind:'web',url:'https://a.example/'},{kind:'web',url:'https://b.example/'}];
+assert.deepEqual(json(launch('x',targets)),{web:1,blocked:1,external:1,failed:0});assert.deepEqual(calls,[['obsidian://open','_self'],['about:blank','_blank'],['https://b.example/','_blank']]);assert(launch('x',targets).repeat);now=1800;launch('x',targets);assert.equal(calls.length,6);
+// Geometry and reorder boundary/no-op checks.
+let list=[{id:'a'},{id:'b'},{id:'c'}];assert(M.reorderItem(list,'a',null));assert.deepEqual(list.map(e=>e.id),['b','c','a']);assert(!M.reorderItem(list,'a',null));assert.throws(()=>M.reorderItem(list,'a','unknown'));
+const freeOrder=json(config);M.reorderItem(freeOrder.modules,'learning',null);assert.equal(M.validateConfig(freeOrder).modules.at(-1).type,'learning');
+assert.equal(I.moduleInsertionAt([{left:0,right:100,top:0,bottom:30},{left:0,right:100,top:40,bottom:70}],50,65).index,2);
+assert.equal(I.moduleInsertionAt([{left:100,right:200,top:0,bottom:100}],190,80).index,1);
+console.log('PASS: legacy preservation, ordered deduplicated launch, blocked popup/repeat feedback, module menu ordering, editing launch protection and saved configuration order');

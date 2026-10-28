@@ -1,0 +1,1 @@
+ALTER TABLE `reader_state` ADD `last_error` text;

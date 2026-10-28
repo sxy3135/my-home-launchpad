@@ -1,0 +1,4 @@
+# Run npm run secrets:local to generate .dev.vars with independent random keys.
+# Never use example values or local development keys for your remote deployment.
+# HOME_SECURITY_KEY: 32 random bytes, encoded as base64url; retain for DB recovery.
+# HOME_RECOVERY_KEY: separate 32 random bytes, encoded as base64url; first setup/reset.

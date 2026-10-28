@@ -1,0 +1,55 @@
+const {chooseEntry}=require("./fixtures/editor-actions.cjs");
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
+const {harness,Evt,root}=require('./fixtures/dom.cjs'),KEY='my-home-launchpad.config.v1';
+const clone=x=>JSON.parse(JSON.stringify(x));
+const data={gptUrl:'https://chatgpt.com/g/g-p-test/project?x=%26%23%25',obsidianUrl:'obsidian://open?vault=My%20Vault&file=Example%20%26%20%E7%AC%94%E8%AE%B0%23Heading',folderPath:'/Users/中文/Documents/O\'Brien (1) & #100% %2F $(touch NO_EXEC)'};
+function fixture(system='mac'){
+ const h=harness();h.ctx.window.navigator=system==='mac'?{platform:'MacIntel',userAgent:'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',maxTouchPoints:0}:h.ctx.window.navigator;
+ let now=10000;h.ctx.Date=class extends Date{static now(){return now}};h.advance=()=>now+=2000;h.run(root+'/src/frontend/model.js');const M=h.ctx.window.HomeModel,c=M.restoreConfig(require("./fixtures/config.json").config),course=c.semesters[0].courses[0];
+ course.name='示例课程 (DEMO) & 中文';course.links[0].url=data.obsidianUrl;course.links[0].name='随意改过的笔记名称';course.links[1].url=data.gptUrl;course.links[1].name='也改过名称';course.links[2].folderPaths.mac=data.folderPath;course.links.push({id:'extra-web',name:'其他入口',url:'https://example.com/',icon:'link',description:''},{id:'extra-gpt',name:'另一个 GPT',url:'https://chatgpt.com/another',icon:'chat',launchRole:'none',description:''});
+ h.store.set(KEY,JSON.stringify(c));let requests=0;h.ctx.fetch=()=>{requests++;throw Error('Unexpected network')};h.start=()=>{for(const f of ['icons.js','ui.js','interactions.js','app.js'])h.run(root+'/src/frontend/'+f)};h.config=c;h.course=course;h.M=M;h.requests=()=>requests;h.get=id=>h.doc.getElementById(id);return h;
+}
+function callback(h){return new URL(h.ctx.window.opened.at(-1)[0])}
+test('Mac target plan preserves literal folder and original note URI through one official completion callback',()=>{
+ const h=fixture(),before=JSON.stringify(h.config),plan=h.M.macCourseTargets(h.course),url=new URL(plan.targets[1].url);
+ assert.equal(plan.hasFolder,true);assert.deepEqual(clone(plan.targets[0]),{kind:'web',url:data.gptUrl});assert.equal(url.protocol,'shortcuts:');assert.equal(url.hostname,'x-callback-url');assert.equal(url.pathname,'/run-shortcut');assert.equal(url.searchParams.get('name'),'My Home 打开资料');assert.equal(url.searchParams.get('input'),'text');assert.equal(url.searchParams.get('text'),data.folderPath);assert.equal(url.searchParams.get('x-success'),data.obsidianUrl);assert.equal(url.searchParams.size,4);assert.equal(plan.targets.length,2);assert.equal(JSON.stringify(h.config),before);
+ for(const folder of ['/Users/中文/空 格 (a) & # %',"/Users/中文/O'Brien/%2F"]){const c=clone(h.course);c.links[2].folderPaths.mac=folder;assert.equal(new URL(h.M.macCourseTargets(c).targets[1].url).searchParams.get('text'),folder)}
+});
+test('blank, absent or unconfigured folder uses original Obsidian URI with no shortcut',()=>{
+ const h=fixture(),c=clone(h.course);c.links[2].folderPaths.mac='';
+ for(const links of [c.links,c.links.filter(x=>x.id!==c.id+'-files'),c.links.map(x=>x.id===c.id+'-files'?{...x,folderPaths:undefined,url:''}:x)]){const plan=h.M.macCourseTargets({...c,links});assert.equal(plan.hasFolder,false);assert.deepEqual(clone(plan.targets),[{kind:'web',url:data.gptUrl},{kind:'external',url:data.obsidianUrl}]);assert(!plan.targets.some(t=>t.url.startsWith('shortcuts:')))}
+});
+test('IDs, types and explicit roles are independent of names; invalid or ambiguous data fails without changing configuration',()=>{
+ const h=fixture(),before=JSON.stringify(h.config);assert.equal(h.M.macCourseTargets(h.course).targets.length,2);assert.equal(JSON.stringify(h.config),before);
+ for(const [index,url] of [[1,''],[0,''],[1,'obsidian://open?vault=v&file=x'],[1,'https://example.com/%00'],[1,'https://user:password@example.com/'],[0,'obsidian://new?vault=v&file=x'],[0,'obsidian://open?vault=v&file=x&append=bad'],[0,'obsidian://open?vault=v&file=x&file=y'],[0,'obsidian://open?vault=v'],[0,'obsidian://open?path=relative'],[0,'obsidian://open?vault=v&file=%00'],[0,'obsidian://open?vault=v&file=%ZZ']]){const c=clone(h.course);c.links[index].url=url;assert.throws(()=>h.M.macCourseTargets(c));assert.equal(JSON.stringify(h.config),before)}
+ const c=clone(h.course);c.links.push({...c.links[1],id:'ambiguous',launchRole:'gpt'});assert.throws(()=>h.M.macCourseTargets(c),/多个GPT/);
+ const custom={id:'custom',name:'新课程',links:[{id:'a',name:'not a GPT name',url:'https://example.com/project',launchRole:'gpt'},{id:'b',name:'not a note name',url:data.obsidianUrl},{id:'c',name:'anything',folderPaths:{windows:'D:\\Notes',mac:data.folderPath},url:''}]};assert.equal(h.M.macCourseTargets(custom).targets[0].url,'https://example.com/project');
+ const imported=clone(h.config);imported.semesters[0].courses[0].links[1].launchRole='gpt';assert.equal(h.M.restoreConfig(imported).semesters[0].courses[0].links[1].launchRole,'gpt');assert.deepEqual(clone(h.M.restoreConfig(h.M.restoreConfig(imported))),clone(h.M.restoreConfig(imported)));
+});
+test('actual Mac title opens GPT and sends only one _self request, protects repeats, preserves individual buttons and latest config',()=>{
+ const h=fixture();h.start();h.doc.querySelectorAll('.course-launch')[0].click();assert.equal(h.ctx.window.opened.length,2);assert.deepEqual(clone(h.ctx.window.opened[0]),[data.gptUrl,'_blank']);assert.equal(h.ctx.window.opened[1][1],'_self');assert.equal(callback(h).searchParams.get('x-success'),data.obsidianUrl);assert(!h.get('toast').textContent.includes('成功'));h.doc.querySelectorAll('.course-launch')[0].click();assert.equal(h.ctx.window.opened.length,2);
+ const items=h.doc.querySelectorAll('.course-link');assert(items.some(x=>x.href===data.gptUrl));assert(items.some(x=>x.href===data.obsidianUrl));assert(items.some(x=>x.href==='https://example.com/'));items.find(x=>x.href&&x.href.startsWith('shortcuts:')).click();assert.equal(callback(h).hostname,'run-shortcut');assert.equal(callback(h).searchParams.get('name'),'My Home 打开资料');assert.equal(callback(h).searchParams.get('x-success'),null);
+ h.advance();const next=clone(h.config);next.semesters[0].courses[0].links[1].url='https://chatgpt.com/newest';next.semesters[0].courses[0].links[0].url='obsidian://open?vault=obsidian&file=Newest%20note';next.semesters[0].courses[0].links[2].folderPaths.mac='/Users/中文/最新';h.ctx.window.dispatchEvent(new Evt('storage',{key:KEY,newValue:JSON.stringify(next)}));h.doc.querySelectorAll('.course-launch')[0].click();assert.equal(h.ctx.window.opened.at(-2)[0],'https://chatgpt.com/newest');assert.equal(callback(h).searchParams.get('text'),'/Users/中文/最新');assert.equal(callback(h).searchParams.get('x-success'),'obsidian://open?vault=obsidian&file=Newest%20note');
+ const count=h.ctx.window.opened.length;h.get('edit-button').click();h.doc.querySelectorAll('.course-launch')[0].click();assert.equal(h.ctx.window.opened.length,count);h.doc.querySelectorAll('.course-launch')[0].click();assert.equal(h.ctx.window.opened.length,count);h.get('cancel-dialog').click();assert.equal(h.requests(),0);assert.equal(h.writes.length,0);
+});
+test('edited and selected course titles retain roles and extras; empty folder starts without shortcut',()=>{
+ const h=fixture();h.course.links[2].folderPaths.mac='';h.store.set(KEY,JSON.stringify(h.config));h.start();h.doc.querySelectorAll('.course-launch')[0].click();assert.deepEqual(clone(h.ctx.window.opened),[[data.gptUrl,'_blank'],[data.obsidianUrl,'_self']]);assert(h.get('toast').textContent.includes('跳过 Finder'));
+ h.get('edit-button').click();h.doc.querySelectorAll('.course-launch')[0].click();chooseEntry(h,1);h.get('field-url').value='https://chatgpt.com/edited';h.get('editor-form').dispatchEvent(new Evt('submit'));assert(!h.get('editor').open);const saved=JSON.parse(h.store.get(KEY));assert.equal(saved.semesters[0].courses[0].links[1].launchRole,'gpt');assert.equal(saved.semesters[0].courses[0].links.at(-1).launchRole,'none');assert.equal(saved.semesters[0].courses[0].links.length,h.course.links.length);h.get('edit-button').click();h.advance();h.doc.querySelectorAll('.course-launch')[0].click();assert.equal(h.ctx.window.opened.at(-2)[0],'https://chatgpt.com/edited');
+ const other=fixture(),second=other.config.semesters[0].courses[1];second.links[1].url='https://chatgpt.com/second';second.links[2].folderPaths.mac='/Users/中文/第二门';other.store.set(KEY,JSON.stringify(other.config));other.start();other.doc.querySelectorAll('.course-launch')[1].click();assert.equal(other.ctx.window.opened[0][0],second.links[1].url);assert.equal(callback(other).searchParams.get('x-success'),second.links[0].url);assert.equal(callback(other).searchParams.get('text'),second.links[2].folderPaths.mac);
+ const missing=fixture();missing.course.links[1].url='';missing.store.set(KEY,JSON.stringify(missing.config));missing.start();missing.doc.querySelectorAll('.course-launch')[0].click();assert.equal(missing.ctx.window.opened,undefined);assert(missing.get('toast').textContent.includes('补充'));
+});
+test('blocked GPT does not prevent native request; exceptions are reported without retries or success claims',()=>{
+ const h=fixture(),calls=[];h.ctx.window.open=(url,target)=>{calls.push([url,target]);return null};h.start();h.doc.querySelectorAll('.course-launch')[0].click();assert.equal(calls.length,2);assert.equal(calls.filter(c=>c[1]==='_self').length,1);assert(h.get('toast').textContent.includes('GPT 网页被拦截'));assert(!h.get('toast').textContent.includes('成功'));assert.equal(h.requests(),0);
+ const f=fixture(),attempts=[];f.ctx.window.open=(url,target)=>{attempts.push([url,target]);if(target==='_self')throw Error('denied');return {opener:null,location:{replace:u=>attempts.at(-1)[0]=u}}};f.start();f.doc.querySelectorAll('.course-launch')[0].click();assert.equal(attempts.length,2);assert(f.get('toast').textContent.includes('未能发出'));assert.equal(f.requests(),0);
+});
+test('Windows title retains original launch order and extras with no callback',()=>{
+ const h=fixture('windows');h.start();const expected=h.M.courseLaunchTargets(h.course.links,'windows').map(x=>x.url);h.doc.querySelectorAll('.course-launch')[0].click();assert.deepEqual(clone(h.ctx.window.opened.map(x=>x[0])),clone(expected));assert(!expected.some(x=>x.startsWith('shortcuts:')));
+});
+test('Mac folder instructions include the shared script and configured Shortcut name',()=>{
+ const build=fs.readFileSync(root+'/scripts/build-static.mjs','utf8'),html=fs.readFileSync(root+'/src/home.html','utf8'),model=fs.readFileSync(root+'/src/frontend/model.js','utf8');
+ assert(build.includes('mac-folders/open-folder.sh'));
+ assert(html.includes('<!-- mac-folder-script -->'));
+ assert(html.includes('My Home 打开资料'));assert(html.includes('Do Nothing'));
+ assert(model.includes('const MAC_SHORTCUT = "My Home 打开资料"'));
+ assert(fs.readFileSync(root+'/dist/index.html','utf8').includes('/usr/bin/open -a Finder'));
+});
