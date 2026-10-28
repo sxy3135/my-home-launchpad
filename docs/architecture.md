@@ -43,6 +43,8 @@ The service worker caches app files and checks their SHA-256 digest before insta
 
 Trusted devices can open local content offline. Devices check session expiry and revocation when they reconnect.
 
+HTTP on localhost and loopback IPs uses a separate local login cookie. HTTPS uses a Secure, HttpOnly cookie with the `__Host-` prefix.
+
 ## Build and deployment
 
 `build-static.mjs` generates frontend assets and the Windows helper ZIP. `build-worker.mjs` packages those files into the Worker. Build output is written to `dist/`.

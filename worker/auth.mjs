@@ -36,8 +36,17 @@ function redirect(path, cookie) {
   });
 }
 
-function cookie(value, age = YEAR) {
-  return `${COOKIE}=${value}; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=${age}`;
+function cookieName(request) {
+  if (request) {
+    const url = new URL(request.url);
+    if (url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)) return "myhome-local";
+  }
+  return COOKIE;
+}
+
+function cookie(value, age = YEAR, request) {
+  const name = cookieName(request);
+  return `${name}=${value}; Path=/;${name === COOKIE ? " Secure;" : ""} HttpOnly; SameSite=Lax; Max-Age=${age}`;
 }
 
 async function form(request) {
@@ -127,17 +136,18 @@ export class HomeAuth {
       return false;
     }
   }
-  async session(profile) {
+  async session(profile, request) {
     const value = b64(encoder.encode(JSON.stringify({
       v: profile.revision,
       exp: Math.floor(this.now() / 1e3) + YEAR
     })));
-    return cookie(value + "." + await this.sign(value));
+    return cookie(value + "." + await this.sign(value), YEAR, request);
   }
   async sessionData(request, profile) {
     if (!this.ready() || !profile) return null;
     try {
-      const token = request.headers.get("cookie")?.split(";").map(s => s.trim()).find(s => s.startsWith(COOKIE + "="))?.slice(COOKIE.length + 1);
+      const name = cookieName(request);
+      const token = request.headers.get("cookie")?.split(";").map(s => s.trim()).find(s => s.startsWith(name + "="))?.slice(name.length + 1);
       if (!token || token.length > 1e3) return false;
       const [value, signature, ...extra] = token.split(".");
       if (extra.length || !signature) return false;
@@ -163,10 +173,10 @@ export class HomeAuth {
       expiresAt: data.exp * 1e3
     } : null;
   }
-  async loginResponse(profile, wantsJSON) {
-    const signed = await this.session(profile);
+  async loginResponse(profile, wantsJSON, request) {
+    const signed = await this.session(profile, request);
     if (!wantsJSON) return redirect("/", signed);
-    const value = signed.slice(COOKIE.length + 1).split(".")[0], data = JSON.parse((new TextDecoder).decode(unb64(value)));
+    const value = signed.slice(cookieName(request).length + 1).split(".")[0], data = JSON.parse((new TextDecoder).decode(unb64(value)));
     return response({
       authenticated: true,
       revision: data.v,
@@ -213,8 +223,8 @@ export class HomeAuth {
       return wantsJSON ? response({
         loggedOut: true
       }, 200, {
-        "Set-Cookie": cookie("", 0)
-      }) : redirect("/login", cookie("", 0));
+        "Set-Cookie": cookie("", 0, request)
+      }) : redirect("/login", cookie("", 0, request));
     }
     if (!this.ready()) return path.startsWith("/api/") ? response({
       error: "login_unavailable"
@@ -279,7 +289,7 @@ export class HomeAuth {
           : await this.db.prepare("INSERT INTO home_security (id,password_hash,revision) VALUES ('home',?,1) ON CONFLICT(id) DO NOTHING").bind(hash).run();
         if (result.meta.changes !== 1) return wantsJSON ? response({error: "password_conflict"}, 409) : redirect(failurePath + "?error=conflict");
         // Sign only the revision written by this request, even if another reset follows.
-        return this.loginResponse({revision: profile ? profile.revision + 1 : 1}, wantsJSON);
+        return this.loginResponse({revision: profile ? profile.revision + 1 : 1}, wantsJSON, request);
       }
       if (path === "/api/auth/login") {
         if (!await this.loginLimit(request)) return wantsJSON ? response({
@@ -289,7 +299,7 @@ export class HomeAuth {
           authenticated: false,
           error: "wrong_password"
         }, 401) : redirect("/login?error=wrong");
-        return this.loginResponse(profile, wantsJSON);
+        return this.loginResponse(profile, wantsJSON, request);
       }
     }
     if (request.method === "POST" && path === "/api/reader/settings") {
